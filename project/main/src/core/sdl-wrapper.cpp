@@ -22,6 +22,15 @@ std::pair<uint32_t, uint32_t> questart::sdl::getDisplaySize()
 
 	switch (questart::getCurrentPlatform())
 	{
+        case questart::Platform::android:
+        {
+            // For mobile platforms we will fetch the full screen size.
+            SDL_DisplayMode displayMode;
+            SDL_GetDesktopDisplayMode(0, &displayMode);
+            displayWidth = static_cast<uint32_t>(displayMode.w);
+            displayHeight = static_cast<uint32_t>(displayMode.h);
+            break;
+		}
 		default:
 		{
 			displayWidth = 640;

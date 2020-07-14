@@ -1,0 +1,43 @@
+apply plugin: 'com.android.application'
+
+android {
+	buildToolsVersion questart.buildToolsVersion
+	compileSdkVersion questart.compileSdkVersion
+	ndkVersion questart.ndkVersion
+
+	defaultConfig {
+		applicationId "com.capstone.questart"
+
+		minSdkVersion questart.minSdkVersion
+		targetSdkVersion questart.targetSdkVersion
+		versionCode questart.versionCode
+		versionName questart.versionName
+
+		externalNativeBuild {
+			cmake {
+				arguments "-DANDROID_STL=c++_shared", "-DAPP_PLATFORM=android-26"
+			}
+		}
+
+		ndk {
+			abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+		}
+	}
+
+	buildTypes {
+		release {
+			signingConfig signingConfigs.debug
+			minifyEnabled false
+		}
+	}
+
+	externalNativeBuild {
+		cmake {
+			path "CMakeLists.txt"
+		}
+	}
+}
+
+dependencies {
+	implementation project(':sdl')
+}

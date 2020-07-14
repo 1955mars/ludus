@@ -1,0 +1,26 @@
+apply plugin: 'com.android.library'
+
+android {
+	buildToolsVersion questart.buildToolsVersion
+	compileSdkVersion questart.compileSdkVersion
+	ndkVersion questart.ndkVersion
+
+	defaultConfig {
+		minSdkVersion questart.minSdkVersion
+		targetSdkVersion questart.targetSdkVersion
+		versionCode questart.versionCode
+		versionName questart.versionName
+	}
+
+	buildTypes {
+		release {
+			minifyEnabled false
+		}
+	}
+
+	externalNativeBuild {
+		ndkBuild {
+			path 'jni/Android.mk'
+		}
+	}
+}
