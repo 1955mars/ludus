@@ -48,10 +48,11 @@ if (!(Test-Path "..\..\third-party\SDL")) {
 
 # If required, create the SDL symlink into the Android library project so it can include it in its build.
 Push-Location "sdl\jni"
-if (!(Test-Path "SDL")) {
-    Write-Host "Linking third-party\SDL to sdl\jni\SDL."
-    cmd.exe /c 'mklink /d SDL ..\..\..\..\third-party\SDL'
+if (Test-Path "SDL") {
+	Remove-Item -Path SDL
 }
+Write-Host "Linking third-party\SDL to sdl\jni\SDL."
+cmd.exe /c 'mklink /d SDL ..\..\..\..\third-party\SDL'
 Pop-Location
 
 # Copy the Java classes from the SDL library source into the Android library project.
