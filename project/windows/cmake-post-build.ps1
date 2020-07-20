@@ -4,5 +4,9 @@ Push-Location -Path "out"
 if (!(Test-Path "SDL2.dll")) {
 	Copy-Item -Path "..\..\..\third-party\sdl-windows\lib\x64\SDL2.dll"
 }
-Pop-Location
 	
+# If there is no 'assets' folder in our output we need to create a new symlink for it
+if (!(Test-Path "assets")) {
+    cmd.exe /c 'mklink /d assets ..\..\main\assets'
+}
+Pop-Location

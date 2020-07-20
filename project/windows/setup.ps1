@@ -35,3 +35,30 @@ if (!(Test-Path "..\..\third-party\glew")) {
         Remove-Item -Path glew-2.1.0-win32.zip
     Pop-Location
 }
+
+# Check if we have the GLM third party library
+if (!(Test-Path "..\..\third-party\glm")) {
+	Write-Host "Downloading GLM into third party folder glm ..."
+	$WebClient = New-Object System.Net.WebClient
+	$WebClient.DownloadFile("https://github.com/g-truc/glm/releases/download/0.9.9.8/glm-0.9.9.8.zip", "..\..\third-party\glm-0.9.9.8.zip")
+	
+	Push-Location -Path "..\..\third-party"
+		Write-Host "Unzipping GLM library into third-party\glm ..."
+		cmd.exe /c 'tar -xf glm-0.9.9.8.zip'
+		Remove-Item -Path glm-0.9.9.8.zip
+	Pop-Location
+}
+
+# Check if we have the Tiny Object Loader library
+if (!(Test-Path "..\..\third-party\tiny-obj-loader")) {
+	Write-Host "Downloading Tiny Object Loader into third party folder tiny-object-loader ..."
+	$WebClient = New-Object System.Net.WebClient
+	$WebClient.DownloadFile("https://github.com/syoyo/tinyobjloader/archive/v1.4.1.zip", "..\..\third-party\tiny-obj-loader-v1.4.1.zip")
+	
+	Push-Location -Path "..\..\third-party"
+		Write-Host "Unzipping Tiny Object Loader library into third-party\tiny-object-loader ..."
+		cmd.exe /c 'tar -xf tiny-obj-loader-v1.4.1.zip'
+		Move-Item -Path tinyobjloader-1.4.1 -Destination tiny-obj-loader
+		Remove-Item -Path tiny-obj-loader-v1.4.1.zip
+	Pop-Location
+}

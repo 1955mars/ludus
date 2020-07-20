@@ -62,4 +62,20 @@ if (!(Test-Path "java\org\libsdl")) {
 }
 Pop-Location
 
+# If the main Android application doesn't yet have an assets folder, create one.
+Push-Location "app\src\main"
+if (!(Test-Path "assets")) {
+    Write-Host "Creating Android root 'assets' folder ..."
+    New-Item -Path assets -ItemType Directory
+}
+Pop-Location
+
+# Create a symlink to the main assets folder so they are included in the Android application.
+Push-Location "app\src\main\assets"
+if (!(Test-Path "assets")) {
+    Write-Host "Linking assets"
+    cmd.exe /c 'mklink /d assets ..\..\..\..\..\main\assets'
+}
+Pop-Location
+
 Write-Host "All done - import the project in this folder into Android Studio to run it!"

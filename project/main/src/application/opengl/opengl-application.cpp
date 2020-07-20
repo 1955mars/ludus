@@ -2,6 +2,7 @@
 #include "../../core/graphics-wrapper.hpp"
 #include "../../core/sdl-wrapper.hpp"
 #include "../../core/log.hpp"
+#include "../../core/assets.hpp"
 #include <string>
 
 using questart::OpenGLApplication;
@@ -37,10 +38,14 @@ struct OpenGLApplication::Internal
 {
     SDL_Window* window;
     SDL_GLContext context;
+    const questart::Mesh mesh;
 
     Internal() : window(questart::sdl::createWindow(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI)),
-                 context(::createContext(window)) 
+                 context(::createContext(window)),
+                     mesh(questart::assets::loadOBJFile("assets/models/crate.obj")) 
     {
+        questart::log("CRATE!", "Crate has " + std::to_string(mesh.getVertices().size()) +
+            " vertices and " + std::to_string(mesh.getIndices().size()) + " indices.");
     }
 
     void render()

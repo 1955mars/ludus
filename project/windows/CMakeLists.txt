@@ -12,6 +12,8 @@ set(LIB_GLEW ${THIRD_PARTY_DIR}/glew/lib/Release/x64/glew32s.lib)
 
 include_directories(${THIRD_PARTY_DIR}/sdl-windows/include)
 include_directories(${THIRD_PARTY_DIR}/glew/include)
+include_directories(${THIRD_PARTY_DIR}/glm)
+include_directories(${THIRD_PARTY_DIR}/tiny-obj-loader)
 
 file(GLOB_RECURSE CPP_HEADERS ${MAIN_SOURCE_DIR}/*.hpp)
 file(GLOB_RECURSE CPP_SOURCES ${MAIN_SOURCE_DIR}/*.cpp)
