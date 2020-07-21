@@ -70,5 +70,5 @@ target_link_libraries(
 	hidapi
 	sdl2
 	${log-lib}
-	GLESv3
+	GLESv2
 )

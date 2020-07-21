@@ -1,8 +1,11 @@
 #include "opengl-application.hpp"
+#include "opengl-pipeline.hpp"
+#include "opengl-mesh.hpp"
 #include "../../core/graphics-wrapper.hpp"
 #include "../../core/sdl-wrapper.hpp"
 #include "../../core/log.hpp"
 #include "../../core/assets.hpp"
+#include "../../core/perspective-camera.hpp"
 #include <string>
 
 using questart::OpenGLApplication;
@@ -32,20 +35,44 @@ namespace
 
         return context;
     }
+
+    questart::PerspectiveCamera createCamera()
+    {
+        std::pair<uint32_t, uint32_t> displaySize{questart::sdl::getDisplaySize()};
+
+        return questart::PerspectiveCamera(static_cast<float>(displaySize.first), static_cast<float>(displaySize.second));
+    }
+
+    glm::mat4 createMeshTransform()
+    {
+        glm::mat4 identity{1.0f};
+        glm::vec3 position{0.0f, 0.0f, 0.0f};
+        glm::vec3 rotationAxis{0.0f, 1.0f, 0.0f};
+        glm::vec3 scale{1.0f, 1.0f, 1.0f};
+        float rotationDegrees{45.0f};
+
+        return glm::translate(identity, position) *
+               glm::rotate(identity, glm::radians(rotationDegrees), rotationAxis) *
+               glm::scale(identity, scale);
+    }
 }// namespace
 
 struct OpenGLApplication::Internal
 {
     SDL_Window* window;
     SDL_GLContext context;
-    const questart::Mesh mesh;
+    const questart::PerspectiveCamera camera;
+    const questart::OpenGLPipeline defaultPipeline;
+    const questart::OpenGLMesh mesh;
+    const glm::mat4 meshTransform;
 
     Internal() : window(questart::sdl::createWindow(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI)),
                  context(::createContext(window)),
-                     mesh(questart::assets::loadOBJFile("assets/models/crate.obj")) 
+                 camera(::createCamera()),
+                 defaultPipeline(questart::OpenGLPipeline("default")),
+                 mesh(questart::OpenGLMesh(questart::assets::loadOBJFile("assets/models/crate.obj"))),
+                 meshTransform(::createMeshTransform())
     {
-        questart::log("CRATE!", "Crate has " + std::to_string(mesh.getVertices().size()) +
-            " vertices and " + std::to_string(mesh.getIndices().size()) + " indices.");
     }
 
     void render()
@@ -54,6 +81,13 @@ struct OpenGLApplication::Internal
 
         glClearColor(0.3f, 0.7f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        const glm::mat4 mvp{
+            camera.getProjectionMatrix() *
+            camera.getViewMatrix() *
+            meshTransform};
+
+        defaultPipeline.render(mesh, mvp);
 
         SDL_GL_SwapWindow(window);
     }
