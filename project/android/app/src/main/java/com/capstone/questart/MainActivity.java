@@ -8,6 +8,7 @@ public class MainActivity extends SDLActivity {
 		return new String[] {
 			"hidapi",
 			"SDL2",
+			"SDL2_image",
 			"questart"
 		};
 	}

@@ -3,6 +3,7 @@
 #include "assets.hpp"
 #include "sdl-wrapper.hpp"
 #include "vertex.hpp"
+#include <SDL_image.h>
 #include <string>
 #include <sstream>
 #include <tiny_obj_loader.h>
@@ -39,26 +40,75 @@ questart::Mesh questart::assets::loadOBJFile(const std::string& path)
 
     std::vector<questart::Vertex> vertices;
     std::vector<uint32_t> indices;
-    std::unordered_map<glm::vec3, uint32_t> uniqueVertices;
+    std::unordered_map<questart::Vertex, uint32_t> uniqueVertices;
 
     for (const auto& shape : shapes)
     {
         for (const auto& index : shape.mesh.indices)
         {
+            // Construct a new (x, y, z) position for the current mesh index.
             glm::vec3 position{
                 attributes.vertices[3 * index.vertex_index + 0],
                 attributes.vertices[3 * index.vertex_index + 1],
                 attributes.vertices[3 * index.vertex_index + 2]};
 
-            if (uniqueVertices.count(position) == 0)
+            // Construct a new (u, v) texture coordinate for the current mesh index.
+            glm::vec2 texCoord{
+                attributes.texcoords[2 * index.texcoord_index + 0],
+                1.0f - attributes.texcoords[2 * index.texcoord_index + 1]};
+
+            // Construct a vertex with the extracted data.
+            questart::Vertex vertex{position, texCoord};
+
+            // This will help deduplicate vertices - we maintain a hash map where a
+            // vertex is used as a unique key with its value being which index can
+            // be used to locate the vertex. The vertex is only added if it has not
+            // been added before.
+            if (uniqueVertices.count(vertex) == 0)
             {
-                uniqueVertices[position] = static_cast<uint32_t>(vertices.size());
-                vertices.push_back(questart::Vertex{position});
+                uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
+                vertices.push_back(vertex);
             }
 
-            indices.push_back(uniqueVertices[position]);
+            indices.push_back(uniqueVertices[vertex]);
         }
     }
 
     return questart::Mesh{vertices, indices};
+}
+
+questart::Bitmap questart::assets::loadBitmap(const std::string& path)
+{
+    SDL_RWops* file{SDL_RWFromFile(path.c_str(), "rb")};
+    SDL_Surface* source{IMG_Load_RW(file, 1)};
+    SDL_Rect imageFrame{0, 0, source->w, source->h};
+
+    uint32_t redMask;
+    uint32_t greenMask;
+    uint32_t blueMask;
+    uint32_t alphaMask;
+
+#if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
+    redMask = 0xff000000;
+    greenMask = 0x00ff0000;
+    blueMask = 0x0000ff00;
+    alphaMask = 0x000000ff;
+#else
+    redMask = 0x000000ff;
+    greenMask = 0x0000ff00;
+    blueMask = 0x00ff0000;
+    alphaMask = 0xff000000;
+#endif
+
+    SDL_Surface* target{SDL_CreateRGBSurface(
+        0,
+        imageFrame.w, imageFrame.h,
+        32,
+        redMask, greenMask, blueMask, alphaMask)};
+
+    SDL_BlitSurface(source, &imageFrame, target, &imageFrame);
+
+    SDL_FreeSurface(source);
+
+    return questart::Bitmap(target);
 }

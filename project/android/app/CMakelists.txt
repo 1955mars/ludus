@@ -22,9 +22,17 @@ add_library(
 	IMPORTED
 )
 
+
 #This is the main SDL library target, we will name it 'sdl2'.
 add_library(
 	sdl2
+	SHARED
+	IMPORTED
+)
+
+#This is the SDL IMAGE library target, we will name it 'sdl2_image'
+add_library(
+	sdl2_image
 	SHARED
 	IMPORTED
 )
@@ -47,10 +55,18 @@ set_target_properties(
 	${SDL_SO_DIR}/libSDL2.so
 )
 
+set_target_properties(
+	sdl2_image
+	PROPERTIES
+	IMPORTED_LOCATION
+	${SDL_SO_DIR}/libSDL2_image.so
+)
+
 #We will tell our build system where to look for third party header files.
 include_directories(${THIRD_PARTY_DIR}/SDL/include)
 include_directories(${THIRD_PARTY_DIR}/glm)
 include_directories(${THIRD_PARTY_DIR}/tiny-obj-loader)
+include_directories(${THIRD_PARTY_DIR}/SDL2_image)
 
 # We will recursively collate all .hpp header and .cpp source files under the main source directory as the input for the compilation.
 file(GLOB_RECURSE CPP_HEADERS ${MAIN_SOURCE_DIR}/*.hpp)
@@ -69,6 +85,7 @@ target_link_libraries(
 	questart
 	hidapi
 	sdl2
+	sdl2_image
 	${log-lib}
 	GLESv2
 )

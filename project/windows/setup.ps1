@@ -62,3 +62,17 @@ if (!(Test-Path "..\..\third-party\tiny-obj-loader")) {
 		Remove-Item -Path tiny-obj-loader-v1.4.1.zip
 	Pop-Location
 }
+
+# Check that we have the SDL2_image third party Windows dev library
+if (!(Test-Path "..\..\third-party\sdl-image-windows")) {
+    Write-Host "Downloading SDL Image Windows library into third party folder sdl-image-windows ..."
+    $WebClient = New-Object System.Net.WebClient
+    $WebClient.DownloadFile("https://www.libsdl.org/projects/SDL_image/release/SDL2_image-devel-2.0.4-VC.zip", "..\..\third-party\SDL2_image-devel-2.0.4-VC.zip")
+
+    Push-Location -Path "..\..\third-party"
+        Write-Host "Unzipping SDL Image Windows library into third-party\sdl-image-windows ..."
+        cmd.exe /c 'tar -xf SDL2_image-devel-2.0.4-VC.zip'
+        Move-Item -Path SDL2_image-2.0.4 -Destination sdl-image-windows
+        Remove-Item -Path SDL2_image-devel-2.0.4-VC.zip
+    Pop-Location
+}

@@ -9,19 +9,26 @@ namespace
 {
     GLuint createVertexBuffer(const questart::Mesh& mesh)
     {
-        std::vector<glm::vec3> positions;
+        std::vector<float> bufferData;
 
         for (const auto& vertex : mesh.getVertices())
         {
-            positions.push_back(vertex.position);
+            // Position
+            bufferData.push_back(vertex.position.x);
+            bufferData.push_back(vertex.position.y);
+            bufferData.push_back(vertex.position.z);
+
+            // Texture Coordinates
+            bufferData.push_back(vertex.texCoord.x);
+            bufferData.push_back(vertex.texCoord.y);
         }
 
         GLuint bufferId;
         glGenBuffers(1, &bufferId);
         glBindBuffer(GL_ARRAY_BUFFER, bufferId);
         glBufferData(GL_ARRAY_BUFFER,
-                     positions.size() * sizeof(glm::vec3),
-                     positions.data(),
+                     bufferData.size() * sizeof(float),
+                     bufferData.data(),
                      GL_STATIC_DRAW);
 
         return bufferId;

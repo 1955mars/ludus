@@ -1,6 +1,7 @@
 #include "opengl-application.hpp"
 #include "opengl-pipeline.hpp"
 #include "opengl-mesh.hpp"
+#include "opengl-texture.hpp"
 #include "../../core/graphics-wrapper.hpp"
 #include "../../core/sdl-wrapper.hpp"
 #include "../../core/log.hpp"
@@ -65,21 +66,21 @@ struct OpenGLApplication::Internal
     const questart::OpenGLPipeline defaultPipeline;
     const questart::OpenGLMesh mesh;
     const glm::mat4 meshTransform;
+    const questart::OpenGLTexture texture;
 
     Internal() : window(questart::sdl::createWindow(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI)),
                  context(::createContext(window)),
                  camera(::createCamera()),
                  defaultPipeline(questart::OpenGLPipeline("default")),
                  mesh(questart::OpenGLMesh(questart::assets::loadOBJFile("assets/models/crate.obj"))),
-                 meshTransform(::createMeshTransform())
-    {
-    }
+                 meshTransform(::createMeshTransform()),
+                 texture(questart::OpenGLTexture(questart::assets::loadBitmap("assets/textures/crate.png"))) {}
 
     void render()
     {
         SDL_GL_MakeCurrent(window, context);
 
-        glClearColor(0.3f, 0.7f, 0.0f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         const glm::mat4 mvp{
@@ -87,7 +88,7 @@ struct OpenGLApplication::Internal
             camera.getViewMatrix() *
             meshTransform};
 
-        defaultPipeline.render(mesh, mvp);
+        defaultPipeline.render(mesh, texture, mvp);
 
         SDL_GL_SwapWindow(window);
     }

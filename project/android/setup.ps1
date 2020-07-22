@@ -62,6 +62,33 @@ if (!(Test-Path "java\org\libsdl")) {
 }
 Pop-Location
 
+# Check that we have the GLM third party library
+if (!(Test-Path "..\..\third-party\glm")) {
+    Write-Host "Downloading GLM into third party folder ..."
+    $WebClient = New-Object System.Net.WebClient
+    $WebClient.DownloadFile("https://github.com/g-truc/glm/releases/download/0.9.9.8/glm-0.9.9.8.zip", "..\..\third-party\glm-0.9.9.8.zip")
+
+    Push-Location -Path "..\..\third-party"
+        Write-Host "Unzipping GLM into third party folder ..."
+        cmd.exe /c 'tar -xf glm-0.9.9.8.zip'
+        Remove-Item -Path glm-0.9.9.8.zip
+    Pop-Location
+}
+
+# Check that we have the Tiny OBJ Loader third party library
+if (!(Test-Path "..\..\third-party\tiny-obj-loader")) {
+    Write-Host "Downloading Tiny OBJ Loader into third party folder ..."
+    $WebClient = New-Object System.Net.WebClient
+    $WebClient.DownloadFile("https://github.com/syoyo/tinyobjloader/archive/v1.4.1.zip", "..\..\third-party\tiny-obj-loader-v1.4.1.zip")
+
+    Push-Location -Path "..\..\third-party"
+        Write-Host "Unzipping Tiny OBJ Loader into third party folder ..."
+        cmd.exe /c 'tar -xf tiny-obj-loader-v1.4.1.zip'
+        Move-Item -Path tinyobjloader-1.4.1 -Destination tiny-obj-loader
+        Remove-Item -Path tiny-obj-loader-v1.4.1.zip
+    Pop-Location
+}
+
 # If the main Android application doesn't yet have an assets folder, create one.
 Push-Location "app\src\main"
 if (!(Test-Path "assets")) {
@@ -77,5 +104,34 @@ if (!(Test-Path "assets")) {
     cmd.exe /c 'mklink /d assets ..\..\..\..\..\main\assets'
 }
 Pop-Location
+
+# Check that we have the SDL2 image third party source folder.
+if (!(Test-Path "..\..\third-party\SDL2_image")) {
+    Write-Host "Fetching SDL2_image source library (2.0.4) ..."
+    $WebClient = New-Object System.Net.WebClient
+    $WebClient.DownloadFile("https://www.libsdl.org/projects/SDL_image/release/SDL2_image-2.0.4.zip", "..\..\third-party\SDL2_image-2.0.4.zip")
+
+    Push-Location -Path "..\..\third-party"
+        Write-Host "Unzipping SDL2_image source into third-party\SDL2_image ..."
+        cmd.exe /c 'tar -xf SDL2_image-2.0.4.zip'
+        Move-Item -Path SDL2_image-2.0.4 -Destination SDL2_image
+        Remove-Item -Path SDL2_image-2.0.4.zip
+    Pop-Location
+}
+
+# If required, create the SDL2_image symlink into the Android library project so it can include it in its build.
+Push-Location "sdl\jni"
+if (!(Test-Path "SDL2_image")) {
+    Write-Host "Linking third-party\SDL2_image to sdl\jni\SDL2_image."
+    cmd.exe /c 'mklink /d SDL2_image ..\..\..\..\third-party\SDL2_image'
+}
+Pop-Location
+
+# We will disable 'webp' integration.
+Push-Location "..\..\third-party\SDL2_image"
+    Write-Host "Disabling SDL2_image webp integration ..."
+    ((Get-Content -Path Android.mk -Raw) -replace('SUPPORT_WEBP \?= true', 'SUPPORT_WEBP ?= false')) | Set-Content -Path Android.mk
+Pop-Location
+
 
 Write-Host "All done - import the project in this folder into Android Studio to run it!"

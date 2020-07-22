@@ -3,6 +3,7 @@
 #include "../application/opengl/opengl-application.hpp"
 #include "log.hpp"
 #include "sdl-wrapper.hpp"
+#include <SDL_image.h>
 #include <stdexcept>
 #include <string>
 
@@ -21,6 +22,13 @@ struct Engine::Internal
         questart::log(logTag, "Starting engine ...");
         SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
         questart::log(logTag, "SDL2 initialized successfully!");
+
+        if (IMG_Init(IMG_INIT_PNG) != IMG_INIT_PNG)
+        {
+            throw std::runtime_error(logTag + " Could not initialize SDL2_image ...");
+        }
+        questart::log(logTag, "SDL2_image initialized successfully with PNG support ...");
+
         resolveApplication()->startApplication();
     }
 
