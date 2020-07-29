@@ -1,10 +1,11 @@
 #pragma once
+#include "../core/internal_ptr.hpp"
 
 namespace questart
 {
 	struct Application
     {
-        Application() = default;
+        Application();
 
         virtual ~Application() = default;
 
@@ -12,6 +13,12 @@ namespace questart
 
         bool runMainLoop();
 
+        virtual void update(const float& delta) = 0;
+
         virtual void render() = 0;
+
+    private:
+        struct Internal;
+        questart::internal_ptr<Internal> internal;
     }; // struct Application
 } // namespace questart

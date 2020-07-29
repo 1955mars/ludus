@@ -8,6 +8,7 @@ namespace questart
 	struct OpenGLApplication : public questart::Application
     {
         OpenGLApplication();
+        void update(const float& delta) override;
         void render() override;
 
     private:

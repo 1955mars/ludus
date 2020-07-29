@@ -1,4 +1,6 @@
 #include "opengl-pipeline.hpp"
+#include "opengl-mesh.hpp"
+#include "opengl-asset-manager.hpp"
 #include "../../core/assets.hpp"
 #include "../../core/log.hpp"
 #include <stdexcept>
@@ -99,31 +101,57 @@ struct OpenGLPipeline::Internal
           offsetPosition(0),
           offsetTexCoord(3 * sizeof(float)) {}
 
-    void render(const questart::OpenGLMesh& mesh, const questart::OpenGLTexture& texture, const glm::mat4& mvp) const
+    void render(
+        const questart::OpenGLAssetManager& assetManager,
+        const std::vector<questart::StaticMeshInstance>& staticMeshInstances) const
     {
         // Instruct OpenGL to starting using our shader program.
         glUseProgram(shaderProgramId);
 
-        // Populate the 'mvp' uniform in the shader program.
-        glUniformMatrix4fv(uniformLocationMVP, 1, GL_FALSE, &mvp[0][0]);
-
-        // Activate the 'vertexPosition' attribute and specify how it should be configured.
+        // Enable the 'a_vertexPosition' attribute.
         glEnableVertexAttribArray(attributeLocationVertexPosition);
-        glVertexAttribPointer(attributeLocationVertexPosition, 3, GL_FLOAT, GL_FALSE, stride, (GLvoid*)(offsetPosition));
 
-        // Activate the 'a_texCoord' attribute and specify how it should be configured.
+        // Enable the 'a_texCoord' attribute.
         glEnableVertexAttribArray(attributeLocationTexCoord);
-        glVertexAttribPointer(attributeLocationTexCoord, 2, GL_FLOAT, GL_FALSE, stride, (GLvoid*)(offsetTexCoord));
 
-        // Apply the texture we want to paint the mesh with.
-        texture.bind();
+        for (const auto& staticMeshInstance : staticMeshInstances)
+        {
+            const questart::OpenGLMesh& mesh = assetManager.getStaticMesh(staticMeshInstance.getMesh());
 
-        // Bind the vertex and index buffers.
-        glBindBuffer(GL_ARRAY_BUFFER, mesh.getVertexBufferId());
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.getIndexBufferId());
+            // Populate the 'u_mvp' uniform in the shader program.
+            glUniformMatrix4fv(uniformLocationMVP, 1, GL_FALSE, &staticMeshInstance.getTransformMatrix()[0][0]);
 
-        // Execute the draw command - with how many indices to iterate.
-        glDrawElements(GL_TRIANGLES, mesh.getNumIndices(), GL_UNSIGNED_INT, (GLvoid*)0);
+            // Apply the texture we want to paint the mesh with.
+            assetManager.getTexture(staticMeshInstance.getTexture()).bind();
+
+            // Bind the vertex and index buffers.
+            glBindBuffer(GL_ARRAY_BUFFER, mesh.getVertexBufferId());
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.getIndexBufferId());
+
+            // Configure the 'a_vertexPosition' attribute.
+            glVertexAttribPointer(
+                attributeLocationVertexPosition,
+                3,
+                GL_FLOAT,
+                GL_FALSE,
+                stride,
+                reinterpret_cast<const GLvoid*>(offsetPosition));
+
+            // Configure the 'a_texCoord' attribute.
+            glVertexAttribPointer(attributeLocationTexCoord,
+                                  2,
+                                  GL_FLOAT,
+                                  GL_FALSE,
+                                  stride,
+                                  reinterpret_cast<const GLvoid*>(offsetTexCoord));
+
+            // Execute the draw command - with how many indices to iterate.
+            glDrawElements(
+                GL_TRIANGLES,
+                mesh.getNumIndices(),
+                GL_UNSIGNED_INT,
+                reinterpret_cast<const GLvoid*>(0));
+        }
 
         // Tidy up.
         glDisableVertexAttribArray(attributeLocationVertexPosition);
@@ -139,7 +167,9 @@ struct OpenGLPipeline::Internal
 OpenGLPipeline::OpenGLPipeline(const std::string& shaderName)
     : internal(questart::make_internal_ptr<Internal>(shaderName)) {}
 
-void OpenGLPipeline::render(const questart::OpenGLMesh& mesh, const questart::OpenGLTexture& texture, const glm::mat4& mvp) const
+void OpenGLPipeline::render(
+    const questart::OpenGLAssetManager& assetManager,
+    const std::vector<questart::StaticMeshInstance>& staticMeshInstances) const
 {
-    internal->render(mesh, texture, mvp);
+    internal->render(assetManager, staticMeshInstances);
 }

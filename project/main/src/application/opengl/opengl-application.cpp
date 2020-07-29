@@ -1,13 +1,10 @@
 #include "opengl-application.hpp"
-#include "opengl-pipeline.hpp"
-#include "opengl-mesh.hpp"
-#include "opengl-texture.hpp"
 #include "../../core/graphics-wrapper.hpp"
-#include "../../core/sdl-wrapper.hpp"
 #include "../../core/log.hpp"
-#include "../../core/assets.hpp"
-#include "../../core/perspective-camera.hpp"
-#include <string>
+#include "../../core/sdl-wrapper.hpp"
+#include "../../scene/scene-main.hpp"
+#include "opengl-asset-manager.hpp"
+#include "opengl-renderer.hpp"
 
 using questart::OpenGLApplication;
 
@@ -37,24 +34,24 @@ namespace
         return context;
     }
 
-    questart::PerspectiveCamera createCamera()
+    std::shared_ptr<questart::OpenGLAssetManager> createAssetManager()
     {
-        std::pair<uint32_t, uint32_t> displaySize{questart::sdl::getDisplaySize()};
-
-        return questart::PerspectiveCamera(static_cast<float>(displaySize.first), static_cast<float>(displaySize.second));
+        return std::make_shared<questart::OpenGLAssetManager>(questart::OpenGLAssetManager());
     }
 
-    glm::mat4 createMeshTransform()
+    questart::OpenGLRenderer createRenderer(std::shared_ptr<questart::OpenGLAssetManager> assetManager)
     {
-        glm::mat4 identity{1.0f};
-        glm::vec3 position{0.0f, 0.0f, 0.0f};
-        glm::vec3 rotationAxis{0.0f, 1.0f, 0.0f};
-        glm::vec3 scale{1.0f, 1.0f, 1.0f};
-        float rotationDegrees{45.0f};
+        return questart::OpenGLRenderer(assetManager);
+    }
 
-        return glm::translate(identity, position) *
-               glm::rotate(identity, glm::radians(rotationDegrees), rotationAxis) *
-               glm::scale(identity, scale);
+    std::unique_ptr<questart::Scene> createMainScene(questart::AssetManager& assetManager)
+    {
+        std::pair<uint32_t, uint32_t> displaySize{questart::sdl::getDisplaySize()};
+        std::unique_ptr<questart::Scene> scene{std::make_unique<questart::SceneMain>(
+            static_cast<float>(displaySize.first),
+            static_cast<float>(displaySize.second))};
+        scene->prepare(assetManager);
+        return scene;
     }
 }// namespace
 
@@ -62,19 +59,29 @@ struct OpenGLApplication::Internal
 {
     SDL_Window* window;
     SDL_GLContext context;
-    const questart::PerspectiveCamera camera;
-    const questart::OpenGLPipeline defaultPipeline;
-    const questart::OpenGLMesh mesh;
-    const glm::mat4 meshTransform;
-    const questart::OpenGLTexture texture;
+    const std::shared_ptr<questart::OpenGLAssetManager> assetManager;
+    questart::OpenGLRenderer renderer;
+    std::unique_ptr<questart::Scene> scene;
 
-    Internal() : window(questart::sdl::createWindow(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI)),
+    Internal() : window(questart::sdl::createWindow(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE)),
                  context(::createContext(window)),
-                 camera(::createCamera()),
-                 defaultPipeline(questart::OpenGLPipeline("default")),
-                 mesh(questart::OpenGLMesh(questart::assets::loadOBJFile("assets/models/crate.obj"))),
-                 meshTransform(::createMeshTransform()),
-                 texture(questart::OpenGLTexture(questart::assets::loadBitmap("assets/textures/crate.png"))) {}
+                 assetManager(::createAssetManager()),
+                 renderer(::createRenderer(assetManager)) {}
+
+    void update(const float& delta)
+    {
+        getScene().update(delta);
+    }
+
+    questart::Scene& getScene()
+    {
+        if (!scene)
+        {
+            scene = ::createMainScene(*assetManager);
+        }
+
+        return *scene;
+    }
 
     void render()
     {
@@ -83,12 +90,7 @@ struct OpenGLApplication::Internal
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        const glm::mat4 mvp{
-            camera.getProjectionMatrix() *
-            camera.getViewMatrix() *
-            meshTransform};
-
-        defaultPipeline.render(mesh, texture, mvp);
+        getScene().render(renderer);
 
         SDL_GL_SwapWindow(window);
     }
@@ -102,6 +104,11 @@ struct OpenGLApplication::Internal
 };
 
 OpenGLApplication::OpenGLApplication() : internal(questart::make_internal_ptr<Internal>()) {}
+
+void OpenGLApplication::update(const float& delta)
+{
+    internal->update(delta);
+}
 
 void OpenGLApplication::render()
 {
