@@ -1,7 +1,7 @@
 #include "opengl-application.hpp"
 #include "../../core/graphics-wrapper.hpp"
 #include "../../core/log.hpp"
-#include "../../core/sdl-wrapper.hpp"
+#include "../../core/sdl-window.hpp"
 #include "../../scene/scene-main.hpp"
 #include "opengl-asset-manager.hpp"
 #include "opengl-renderer.hpp"
@@ -57,14 +57,14 @@ namespace
 
 struct OpenGLApplication::Internal
 {
-    SDL_Window* window;
+    questart::SDLWindow window;
     SDL_GLContext context;
     const std::shared_ptr<questart::OpenGLAssetManager> assetManager;
     questart::OpenGLRenderer renderer;
     std::unique_ptr<questart::Scene> scene;
 
-    Internal() : window(questart::sdl::createWindow(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE)),
-                 context(::createContext(window)),
+    Internal() : window(questart::SDLWindow(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE)),
+                 context(::createContext(window.getWindow())),
                  assetManager(::createAssetManager()),
                  renderer(::createRenderer(assetManager)) {}
 
@@ -85,20 +85,19 @@ struct OpenGLApplication::Internal
 
     void render()
     {
-        SDL_GL_MakeCurrent(window, context);
+        SDL_GL_MakeCurrent(window.getWindow(), context);
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         getScene().render(renderer);
 
-        SDL_GL_SwapWindow(window);
+        SDL_GL_SwapWindow(window.getWindow());
     }
 
     ~Internal()
     {
         SDL_GL_DeleteContext(context);
-        SDL_DestroyWindow(window);
     }
 
 };
