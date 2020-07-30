@@ -6,7 +6,7 @@ ext.questart = [
 	compileSdkVersion: 26,
 	minSdkVersion: 26,
 	targetSdkVersion: 26,
-	ndkVersion: '20.0.5594570'
+	ndkVersion: '21.3.6528147'
 ]
 
 buildscript {

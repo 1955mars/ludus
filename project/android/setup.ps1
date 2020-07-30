@@ -9,7 +9,7 @@ $env:ANDROID_HOME="C:\Users\$env:UserName\AppData\Local\Android\Sdk"
 Write-Host "Using Android SDK at: $env:ANDROID_HOME"
 
 # We will be using a specific version of the Android NDK.
-$NDK_VERSION="20.0.5594570"
+$NDK_VERSION="21.3.6528147"
 $env:ANDROID_NDK="$env:ANDROID_HOME\ndk\$NDK_VERSION"
 Write-Host "Using Android NDK at: $env:ANDROID_NDK"
 

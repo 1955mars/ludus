@@ -6,6 +6,7 @@
 #include <vulkan/vulkan.hpp>
 #elif __ANDROID__
 #include <vulkan_wrapper.h>
+#undef VK_NO_PROTOTYPES
 #include <vulkan/vulkan.hpp>
 #include <GLES3/gl3.h>
 #define USING_GLES
