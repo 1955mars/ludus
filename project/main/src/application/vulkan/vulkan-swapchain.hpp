@@ -21,6 +21,7 @@ namespace questart
 
         const vk::SwapchainKHR& getSwapchain() const;
         const std::vector<questart::VulkanImageView>& getImageViews() const;
+        const vk::Format& getColorFormat() const;
 
     private:
         struct Internal;

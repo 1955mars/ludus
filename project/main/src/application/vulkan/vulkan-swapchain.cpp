@@ -221,3 +221,8 @@ const std::vector<questart::VulkanImageView>& VulkanSwapchain::getImageViews() c
 {
     return internal->imageViews;
 }
+
+const vk::Format& VulkanSwapchain::getColorFormat() const
+{
+    return internal->format.colorFormat;
+}

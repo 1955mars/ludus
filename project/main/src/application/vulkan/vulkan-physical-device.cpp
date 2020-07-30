@@ -1,5 +1,6 @@
 #include "vulkan-physical-device.hpp"
 #include "../../core/log.hpp"
+#include <stack>
 
 using questart::VulkanPhysicalDevice;
 
@@ -75,14 +76,65 @@ namespace
 
         return selectedDevice;
     }
+
+
+    vk::SampleCountFlagBits getMultiSamplingLevel(const vk::PhysicalDevice& physicalDevice)
+    {
+        static const std::string logTag{"questart::VulkanPhysicalDevice::getMultiSamplingLevel"};
+
+        vk::PhysicalDeviceProperties properties{physicalDevice.getProperties()};
+        vk::SampleCountFlags supportedSampleCounts{properties.limits.framebufferColorSampleCounts};
+
+        std::stack<vk::SampleCountFlagBits> preferredSampleCounts;
+        preferredSampleCounts.push(vk::SampleCountFlagBits::e1);
+        preferredSampleCounts.push(vk::SampleCountFlagBits::e2);
+        preferredSampleCounts.push(vk::SampleCountFlagBits::e4);
+        preferredSampleCounts.push(vk::SampleCountFlagBits::e8);
+
+        while (!preferredSampleCounts.empty())
+        {
+            // Take the sample count at the top of the stack and see if it is supported.
+            vk::SampleCountFlagBits sampleCount{preferredSampleCounts.top()};
+
+            if (supportedSampleCounts & sampleCount)
+            {
+                return sampleCount;
+            }
+
+            // If our preferred sample count is not found, pop the stack ready for the next iteration.
+            preferredSampleCounts.pop();
+        }
+
+        // If none of our sample counts is found, multi sampling is not supported on this device ...
+        throw std::runtime_error(logTag + ": Multi sampling not supported.");
+    }
+
+    vk::Format getDepthFormat(const vk::PhysicalDevice& physicalDevice)
+    {
+        static const std::string logTag{"questart::VulkanPhysicalDevice::getDepthFormat"};
+
+        vk::FormatProperties formatProperties{physicalDevice.getFormatProperties(vk::Format::eD32Sfloat)};
+
+        if (formatProperties.optimalTilingFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment)
+        {
+            return vk::Format::eD32Sfloat;
+        }
+
+        throw std::runtime_error(logTag + ": 32 bit signed depth stencil format not supported.");
+    }
+
 } // namespace
 
 struct VulkanPhysicalDevice::Internal
 {
     const vk::PhysicalDevice physicalDevice;
+    const vk::SampleCountFlagBits multiSamplingLevel;
+    const vk::Format depthFormat;
 
     Internal(const vk::Instance& instance)
-        : physicalDevice(::createPhysicalDevice(instance)) {}
+        : physicalDevice(::createPhysicalDevice(instance)),
+          multiSamplingLevel(::getMultiSamplingLevel(physicalDevice)),
+          depthFormat(::getDepthFormat(physicalDevice)) {}
 };
 
 VulkanPhysicalDevice::VulkanPhysicalDevice(const vk::Instance& instance)
@@ -91,4 +143,14 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(const vk::Instance& instance)
 const vk::PhysicalDevice& VulkanPhysicalDevice::getPhysicalDevice() const
 {
     return internal->physicalDevice;
+}
+
+vk::SampleCountFlagBits VulkanPhysicalDevice::getMultiSamplingLevel() const
+{
+    return internal->multiSamplingLevel;
+}
+
+vk::Format VulkanPhysicalDevice::getDepthFormat() const
+{
+    return internal->depthFormat;
 }

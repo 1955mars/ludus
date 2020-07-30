@@ -10,6 +10,8 @@ namespace questart
         VulkanPhysicalDevice(const vk::Instance& instance);
 
         const vk::PhysicalDevice& getPhysicalDevice() const;
+        vk::SampleCountFlagBits getMultiSamplingLevel() const;
+        vk::Format getDepthFormat() const;
 
     private:
         struct Internal;

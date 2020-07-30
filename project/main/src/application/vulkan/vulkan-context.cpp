@@ -3,7 +3,7 @@
 #include "vulkan-physical-device.hpp"
 #include "vulkan-surface.hpp"
 #include "vulkan-device.hpp"
-#include "vulkan-swapchain.hpp"
+#include "vulkan-render-context.hpp"
 #include "../../core/graphics-wrapper.hpp"
 #include "../../core/log.hpp"
 #include "../../core/sdl-window.hpp"
@@ -99,14 +99,14 @@ struct VulkanContext::Internal
     const questart::SDLWindow window;
     const questart::VulkanSurface surface;
     const questart::VulkanDevice device;
-    const questart::VulkanSwapchain swapchain;
+    const questart::VulkanRenderContext renderContext;
 
     Internal() : instance(::createInstance()),
                  physicalDevice(questart::VulkanPhysicalDevice(*instance)),
                  window(questart::SDLWindow(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI)),
                  surface(questart::VulkanSurface(*instance, physicalDevice, window)),
                  device(questart::VulkanDevice(physicalDevice, surface)),
-                 swapchain(questart::VulkanSwapchain(window, physicalDevice, device, surface))
+                 renderContext(questart::VulkanRenderContext(window, physicalDevice, device, surface))
     {
         questart::log("questart::VulkanContext", "Initialized Vulkan context successfully.");
     }
