@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL.h>
+#include <SDL_vulkan.h>
 #include <utility>
 
 namespace questart::sdl

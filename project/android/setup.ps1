@@ -9,7 +9,7 @@ $env:ANDROID_HOME="C:\Users\$env:UserName\AppData\Local\Android\Sdk"
 Write-Host "Using Android SDK at: $env:ANDROID_HOME"
 
 # We will be using a specific version of the Android NDK.
-$NDK_VERSION="21.3.6528147"
+$NDK_VERSION="20.0.5594570"
 $env:ANDROID_NDK="$env:ANDROID_HOME\ndk\$NDK_VERSION"
 Write-Host "Using Android NDK at: $env:ANDROID_NDK"
 
@@ -133,5 +133,20 @@ Push-Location "..\..\third-party\SDL2_image"
     ((Get-Content -Path Android.mk -Raw) -replace('SUPPORT_WEBP \?= true', 'SUPPORT_WEBP ?= false')) | Set-Content -Path Android.mk
 Pop-Location
 
+# We need to add our own `vulkan-wrapper-patch.h` header into the `vulkan_wrapper.h`
+# that ships with NDK version 20. The patch fixes compilation problems when using the
+# `vulkan_wrapper.h` header in combination with the `vulkan.hpp` - both of which ship
+# with NDK version 20, but appear to be misaligned - the `vulkan_wrapper.cpp` has
+# unknown symbols in it which we will need to patch in.
+Push-Location "$env:ANDROID_NDK\sources\third_party\vulkan\src\common"
+    $PATCH_HEADER = Select-String -Path vulkan_wrapper.h -Pattern "#include <vulkan-wrapper-patch.h>"
+
+    if ($null -eq $PATCH_HEADER) {
+        Write-Host "Patching <android-ndk>\sources\third_party\vulkan\src\common\vulkan_wrapper.h to include patch wrapper ..."
+        ((Get-Content -Path vulkan_wrapper.h -Raw) -replace('\#include <vulkan\/vulkan\.h>', "#include <vulkan/vulkan.h>`r`n#include <vulkan-wrapper-patch.h>")) | Set-Content -Path vulkan_wrapper.h
+    }
+Pop-Location
+
+Write-Host "All done - import the project in this folder into Android Studio to run it!"
 
 Write-Host "All done - import the project in this folder into Android Studio to run it!"

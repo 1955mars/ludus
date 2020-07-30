@@ -1,6 +1,8 @@
 #include "engine.hpp"
 #include "../application/application.hpp"
 #include "../application/opengl/opengl-application.hpp"
+#include "../application/vulkan/vulkan-application.hpp"
+#include "../application/vulkan/vulkan-common.hpp"
 #include "log.hpp"
 #include "sdl-wrapper.hpp"
 #include <SDL_image.h>
@@ -35,6 +37,19 @@ struct Engine::Internal
     std::unique_ptr<questart::Application> resolveApplication()
     {
         static const std::string logTag{classLogTag + "resolveApplication"};
+
+        if (questart::vulkan::isVulkanAvailable())
+        {
+            try
+            {
+                questart::log(logTag, "Creating Vulkan application ...");
+                return std::make_unique<questart::VulkanApplication>();
+            }
+            catch (const std::exception& error)
+            {
+                questart::log(logTag, "Vulkan application failed to initialize.", error);
+            }
+        }
 
         try
         {
