@@ -116,3 +116,8 @@ VulkanRenderPass::VulkanRenderPass(const questart::VulkanPhysicalDevice& physica
                                    const questart::VulkanDevice& device,
                                    const questart::VulkanSwapchain& swapchain)
     : internal(questart::make_internal_ptr<Internal>(physicalDevice, device, swapchain)) {}
+
+const vk::RenderPass& VulkanRenderPass::getRenderPass() const
+{
+    return internal->renderPass.get();
+}

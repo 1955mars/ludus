@@ -143,16 +143,24 @@ namespace
         // Create a logical device with all the configuration we collated.
         return physicalDevice.getPhysicalDevice().createDeviceUnique(deviceCreateInfo);
     }
+
+    vk::Queue getQueue(const vk::Device& device, const uint32_t& queueIndex)
+    {
+        return device.getQueue(queueIndex, 0);
+    }
+
 } // namespace
 
 struct VulkanDevice::Internal
 {
     const QueueConfig queueConfig;
     const vk::UniqueDevice device;
+    const vk::Queue graphicsQueue;
 
     Internal(const questart::VulkanPhysicalDevice& physicalDevice, const questart::VulkanSurface& surface)
         : queueConfig(::getQueueConfig(physicalDevice.getPhysicalDevice(), surface.getSurface())),
-          device(::createDevice(physicalDevice, queueConfig)) {}
+          device(::createDevice(physicalDevice, queueConfig)),
+          graphicsQueue(::getQueue(device.get(), queueConfig.graphicsQueueIndex)) {}
 
     ~Internal()
     {
@@ -182,4 +190,9 @@ uint32_t VulkanDevice::getPresentationQueueIndex() const
 bool VulkanDevice::hasDiscretePresentationQueue() const
 {
     return internal->queueConfig.hasDiscretePresentationQueue;
+}
+
+const vk::Queue& VulkanDevice::getGraphicsQueue() const
+{
+    return internal->graphicsQueue;
 }

@@ -222,7 +222,17 @@ const std::vector<questart::VulkanImageView>& VulkanSwapchain::getImageViews() c
     return internal->imageViews;
 }
 
+const vk::SwapchainKHR& VulkanSwapchain::getSwapchain() const
+{
+    return *internal->swapchain;
+}
+
 const vk::Format& VulkanSwapchain::getColorFormat() const
 {
     return internal->format.colorFormat;
+}
+
+const vk::Extent2D& VulkanSwapchain::getExtent() const
+{
+    return internal->extent;
 }

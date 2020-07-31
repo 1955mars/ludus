@@ -12,6 +12,7 @@ namespace questart
         const vk::PhysicalDevice& getPhysicalDevice() const;
         vk::SampleCountFlagBits getMultiSamplingLevel() const;
         vk::Format getDepthFormat() const;
+        uint32_t getMemoryTypeIndex(const uint32_t& filter, const vk::MemoryPropertyFlags& flags) const;
 
     private:
         struct Internal;

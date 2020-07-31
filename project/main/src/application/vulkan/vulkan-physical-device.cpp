@@ -123,6 +123,28 @@ namespace
         throw std::runtime_error(logTag + ": 32 bit signed depth stencil format not supported.");
     }
 
+    uint32_t getMemoryTypeIndex(const vk::PhysicalDevice& physicalDevice,
+                                const uint32_t& filter,
+                                const vk::MemoryPropertyFlags& flags)
+    {
+        // Fetch all the memory properties of the physical device.
+        vk::PhysicalDeviceMemoryProperties memoryProperties{physicalDevice.getMemoryProperties()};
+
+        // Loop through each of the memory type fields in the properties.
+        for (uint32_t index = 0; index < memoryProperties.memoryTypeCount; index++)
+        {
+            // If the current memory type is available and has all the property flags required, we
+            // have found a position in the physical device memory indices that is compatible.
+            if ((filter & (1 << index)) && (memoryProperties.memoryTypes[index].propertyFlags & flags) == flags)
+            {
+                return index;
+            }
+        }
+
+        // If no memory type could be found that meets our criteria we can't proceed.
+        throw std::runtime_error("ast::VulkanImage::getMemoryTypeIndex: Failed to find suitable memory type.");
+    }
+
 } // namespace
 
 struct VulkanPhysicalDevice::Internal
@@ -153,4 +175,9 @@ vk::SampleCountFlagBits VulkanPhysicalDevice::getMultiSamplingLevel() const
 vk::Format VulkanPhysicalDevice::getDepthFormat() const
 {
     return internal->depthFormat;
+}
+
+uint32_t VulkanPhysicalDevice::getMemoryTypeIndex(const uint32_t& filter, const vk::MemoryPropertyFlags& flags) const
+{
+    return ::getMemoryTypeIndex(internal->physicalDevice, filter, flags);
 }

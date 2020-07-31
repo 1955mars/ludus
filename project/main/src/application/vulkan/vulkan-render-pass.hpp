@@ -13,6 +13,8 @@ namespace questart
                          const questart::VulkanDevice& device,
                          const questart::VulkanSwapchain& swapchain);
 
+        const vk::RenderPass& getRenderPass() const;
+
     private:
         struct Internal;
         questart::internal_ptr<Internal> internal;

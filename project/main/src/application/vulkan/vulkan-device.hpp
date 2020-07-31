@@ -20,6 +20,8 @@ namespace questart
 
         bool hasDiscretePresentationQueue() const;
 
+        const vk::Queue& getGraphicsQueue() const;
+
     private:
         struct Internal;
         questart::internal_ptr<Internal> internal;

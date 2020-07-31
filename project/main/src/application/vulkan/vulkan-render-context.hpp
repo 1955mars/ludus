@@ -6,6 +6,7 @@
 #include "vulkan-device.hpp"
 #include "vulkan-physical-device.hpp"
 #include "vulkan-surface.hpp"
+#include "vulkan-command-pool.hpp"
 
 namespace questart
 {
@@ -14,7 +15,8 @@ namespace questart
         VulkanRenderContext(const questart::SDLWindow& window,
                             const questart::VulkanPhysicalDevice& physicalDevice,
                             const questart::VulkanDevice& device,
-                            const questart::VulkanSurface& surface);
+                            const questart::VulkanSurface& surface,
+                            const questart::VulkanCommandPool& commandPool);
 
     private:
         struct Internal;

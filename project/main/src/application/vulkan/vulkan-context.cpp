@@ -4,6 +4,7 @@
 #include "vulkan-surface.hpp"
 #include "vulkan-device.hpp"
 #include "vulkan-render-context.hpp"
+#include "vulkan-command-pool.hpp"
 #include "../../core/graphics-wrapper.hpp"
 #include "../../core/log.hpp"
 #include "../../core/sdl-window.hpp"
@@ -99,6 +100,7 @@ struct VulkanContext::Internal
     const questart::SDLWindow window;
     const questart::VulkanSurface surface;
     const questart::VulkanDevice device;
+    const questart::VulkanCommandPool commandPool;
     const questart::VulkanRenderContext renderContext;
 
     Internal() : instance(::createInstance()),
@@ -106,7 +108,8 @@ struct VulkanContext::Internal
                  window(questart::SDLWindow(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI)),
                  surface(questart::VulkanSurface(*instance, physicalDevice, window)),
                  device(questart::VulkanDevice(physicalDevice, surface)),
-                 renderContext(questart::VulkanRenderContext(window, physicalDevice, device, surface))
+                 commandPool(questart::VulkanCommandPool(device)),
+                 renderContext(questart::VulkanRenderContext(window, physicalDevice, device, surface, commandPool))
     {
         questart::log("questart::VulkanContext", "Initialized Vulkan context successfully.");
     }
