@@ -95,15 +95,18 @@ namespace
 
 struct VulkanContext::Internal
 {
+    const std::shared_ptr<questart::VulkanAssetManager> assetManager;
     const vk::UniqueInstance instance;
     const questart::VulkanPhysicalDevice physicalDevice;
     const questart::SDLWindow window;
     const questart::VulkanSurface surface;
     const questart::VulkanDevice device;
     const questart::VulkanCommandPool commandPool;
-    const questart::VulkanRenderContext renderContext;
+    questart::VulkanRenderContext renderContext;
 
-    Internal() : instance(::createInstance()),
+    Internal(std::shared_ptr<questart::VulkanAssetManager> assetManager) 
+               : assetManager(assetManager),
+                 instance(::createInstance()),
                  physicalDevice(questart::VulkanPhysicalDevice(*instance)),
                  window(questart::SDLWindow(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI)),
                  surface(questart::VulkanSurface(*instance, physicalDevice, window)),
@@ -113,6 +116,53 @@ struct VulkanContext::Internal
     {
         questart::log("questart::VulkanContext", "Initialized Vulkan context successfully.");
     }
+
+    bool renderBegin()
+    {
+        if (!renderContext.renderBegin(device))
+        {
+            recreateRenderContext();
+            return false;
+        }
+        return true;
+    }
+
+    void render(const questart::assets::Pipeline& pipeline,
+                const std::vector<questart::StaticMeshInstance>& staticMeshInstances)
+    {
+        // TODO: Implement me
+    }
+
+    void renderEnd()
+    {
+        if (!renderContext.renderEnd(device))
+        {
+            recreateRenderContext();
+        }
+    }
+
+    void recreateRenderContext()
+    {
+        device.getDevice().waitIdle();
+        renderContext = renderContext.recreate(window, physicalDevice, device, surface, commandPool);
+    }
 };
 
-VulkanContext::VulkanContext() : internal(questart::make_internal_ptr<Internal>()) {}
+VulkanContext::VulkanContext(std::shared_ptr<questart::VulkanAssetManager> assetManager)
+    : internal(questart::make_internal_ptr<Internal>(assetManager)) {}
+
+bool VulkanContext::renderBegin()
+{
+    return internal->renderBegin();
+}
+
+void VulkanContext::render(const questart::assets::Pipeline& pipeline,
+                           const std::vector<questart::StaticMeshInstance>& staticMeshInstances)
+{
+    internal->render(pipeline, staticMeshInstances);
+}
+
+void VulkanContext::renderEnd()
+{
+    internal->renderEnd();
+}

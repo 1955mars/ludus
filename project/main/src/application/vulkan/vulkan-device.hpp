@@ -4,6 +4,7 @@
 #include "../../core/internal_ptr.hpp"
 #include "vulkan-physical-device.hpp"
 #include "vulkan-surface.hpp"
+#include <vector>
 
 namespace questart
 {
@@ -21,6 +22,10 @@ namespace questart
         bool hasDiscretePresentationQueue() const;
 
         const vk::Queue& getGraphicsQueue() const;
+        const vk::Queue& getPresentationQueue() const;
+
+        std::vector<vk::UniqueSemaphore> createSemaphores(const uint32_t& count) const;
+        std::vector<vk::UniqueFence> createFences(const uint32_t& count) const;
 
     private:
         struct Internal;

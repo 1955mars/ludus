@@ -16,7 +16,17 @@ namespace questart
                             const questart::VulkanPhysicalDevice& physicalDevice,
                             const questart::VulkanDevice& device,
                             const questart::VulkanSurface& surface,
-                            const questart::VulkanCommandPool& commandPool);
+                            const questart::VulkanCommandPool& commandPool,
+                            const vk::SwapchainKHR& oldSwapchain = vk::SwapchainKHR());
+
+        questart::VulkanRenderContext recreate(const questart::SDLWindow& window,
+                                    const questart::VulkanPhysicalDevice& physicalDevice,
+                                    const questart::VulkanDevice& device,
+                                    const questart::VulkanSurface& surface,
+                                    const questart::VulkanCommandPool& commandPool);
+
+        bool renderBegin(const questart::VulkanDevice& device);
+        bool renderEnd(const questart::VulkanDevice& device);
 
     private:
         struct Internal;

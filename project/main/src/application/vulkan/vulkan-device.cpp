@@ -149,6 +149,33 @@ namespace
         return device.getQueue(queueIndex, 0);
     }
 
+    std::vector<vk::UniqueSemaphore> createSemaphores(const vk::Device& device,
+                                                      const uint32_t& count)
+    {
+        std::vector<vk::UniqueSemaphore> semaphores;
+        vk::SemaphoreCreateInfo info;
+
+        for (uint32_t i = 0; i < count; i++)
+        {
+            semaphores.push_back(device.createSemaphoreUnique(info));
+        }
+
+        return semaphores;
+    }
+
+    std::vector<vk::UniqueFence> createFences(const vk::Device& device, const uint32_t& count)
+    {
+        std::vector<vk::UniqueFence> fences;
+        vk::FenceCreateInfo info{vk::FenceCreateFlagBits::eSignaled};
+
+        for (uint32_t i = 0; i < count; i++)
+        {
+            fences.push_back(device.createFenceUnique(info));
+        }
+
+        return fences;
+    }
+
 } // namespace
 
 struct VulkanDevice::Internal
@@ -156,11 +183,13 @@ struct VulkanDevice::Internal
     const QueueConfig queueConfig;
     const vk::UniqueDevice device;
     const vk::Queue graphicsQueue;
+    const vk::Queue presentationQueue;
 
     Internal(const questart::VulkanPhysicalDevice& physicalDevice, const questart::VulkanSurface& surface)
         : queueConfig(::getQueueConfig(physicalDevice.getPhysicalDevice(), surface.getSurface())),
           device(::createDevice(physicalDevice, queueConfig)),
-          graphicsQueue(::getQueue(device.get(), queueConfig.graphicsQueueIndex)) {}
+          graphicsQueue(::getQueue(device.get(), queueConfig.graphicsQueueIndex)),
+          presentationQueue(::getQueue(device.get(), queueConfig.presentationQueueIndex)) {}
 
     ~Internal()
     {
@@ -195,4 +224,19 @@ bool VulkanDevice::hasDiscretePresentationQueue() const
 const vk::Queue& VulkanDevice::getGraphicsQueue() const
 {
     return internal->graphicsQueue;
+}
+
+const vk::Queue& VulkanDevice::getPresentationQueue() const
+{
+    return internal->presentationQueue;
+}
+
+std::vector<vk::UniqueSemaphore> VulkanDevice::createSemaphores(const uint32_t& count) const
+{
+    return ::createSemaphores(internal->device.get(), count);
+}
+
+std::vector<vk::UniqueFence> VulkanDevice::createFences(const uint32_t& count) const
+{
+    return ::createFences(internal->device.get(), count);
 }

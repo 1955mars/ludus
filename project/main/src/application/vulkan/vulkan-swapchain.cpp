@@ -112,7 +112,8 @@ namespace
         const VulkanSwapchainFormat& format,
         const vk::PresentModeKHR& presentationMode,
         const vk::Extent2D& extent,
-        const vk::SurfaceTransformFlagBitsKHR& transform)
+        const vk::SurfaceTransformFlagBitsKHR& transform,
+        const vk::SwapchainKHR& oldSwapchain)
     {
         // Grab the capabilities of the current physical device in relation to the surface.
         vk::SurfaceCapabilitiesKHR surfaceCapabilities{
@@ -146,7 +147,7 @@ namespace
             vk::CompositeAlphaFlagBitsKHR::eOpaque,   // Composite alpha
             presentationMode,                         // Present mode
             VK_TRUE,                                  // Clipped
-            vk::SwapchainKHR()};                      // Old swapchain
+            oldSwapchain};                      // Old swapchain
 
         // If our device has a discrete presentation queue, we must specify
         // that swapchain images are permitted to be shared between both
@@ -201,12 +202,13 @@ struct VulkanSwapchain::Internal
     Internal(const questart::SDLWindow& window,
              const questart::VulkanPhysicalDevice& physicalDevice,
              const questart::VulkanDevice& device,
-             const questart::VulkanSurface& surface)
+             const questart::VulkanSurface& surface,
+             const vk::SwapchainKHR& oldSwapchain)
         : format(::getFormat(physicalDevice, surface)),
           presentationMode(::getPresentationMode(physicalDevice, surface)),
           extent(::getExtent(window)),
           transform(vk::SurfaceTransformFlagBitsKHR::eIdentity),
-          swapchain(::createSwapchain(physicalDevice, device, surface, format, presentationMode, extent, transform)),
+          swapchain(::createSwapchain(physicalDevice, device, surface, format, presentationMode, extent, transform, oldSwapchain)),
           imageViews(::createImageViews(device, swapchain.get(), format))
     {}
 };
@@ -214,8 +216,9 @@ struct VulkanSwapchain::Internal
 VulkanSwapchain::VulkanSwapchain(const questart::SDLWindow& window,
                                  const questart::VulkanPhysicalDevice& physicalDevice,
                                  const questart::VulkanDevice& device,
-                                 const questart::VulkanSurface& surface)
-    : internal(questart::make_internal_ptr<Internal>(window, physicalDevice, device, surface)) {}
+                                 const questart::VulkanSurface& surface,
+                                 const vk::SwapchainKHR& oldSwapchain)
+    : internal(questart::make_internal_ptr<Internal>(window, physicalDevice, device, surface, oldSwapchain)) {}
 
 const std::vector<questart::VulkanImageView>& VulkanSwapchain::getImageViews() const
 {
@@ -235,4 +238,9 @@ const vk::Format& VulkanSwapchain::getColorFormat() const
 const vk::Extent2D& VulkanSwapchain::getExtent() const
 {
     return internal->extent;
+}
+
+uint32_t VulkanSwapchain::getImageCount() const
+{
+    return static_cast<uint32_t>(internal->imageViews.size());
 }

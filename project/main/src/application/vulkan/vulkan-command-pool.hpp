@@ -2,6 +2,7 @@
 
 #include "../../core/internal_ptr.hpp"
 #include "vulkan-device.hpp"
+#include <vector>
 
 namespace questart
 {
@@ -13,6 +14,9 @@ namespace questart
 
         void endCommandBuffer(const vk::CommandBuffer& commandBuffer,
                               const questart::VulkanDevice& device) const;
+
+        std::vector<vk::UniqueCommandBuffer> createCommandBuffers(const questart::VulkanDevice& device,
+                                                                  const uint32_t& count) const;
 
     private:
         struct Internal;

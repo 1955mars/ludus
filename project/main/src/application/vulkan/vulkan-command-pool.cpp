@@ -64,6 +64,19 @@ namespace
         device.getGraphicsQueue().submit(1, &submitInfo, vk::Fence());
         device.getGraphicsQueue().waitIdle();
     }
+
+    std::vector<vk::UniqueCommandBuffer> createCommandBuffers(const vk::Device& device,
+                                                              const vk::CommandPool& commandPool,
+                                                              const uint32_t& count)
+    {
+        vk::CommandBufferAllocateInfo info{
+            commandPool,                      // Command pool
+            vk::CommandBufferLevel::ePrimary, // Level
+            count                             // Command buffer count
+        };
+
+        return device.allocateCommandBuffersUnique(info);
+    }
 } // namespace
 
 struct VulkanCommandPool::Internal
@@ -85,4 +98,10 @@ vk::UniqueCommandBuffer VulkanCommandPool::beginCommandBuffer(const questart::Vu
 void VulkanCommandPool::endCommandBuffer(const vk::CommandBuffer& commandBuffer, const questart::VulkanDevice& device) const
 {
     ::endCommandBuffer(commandBuffer, device);
+}
+
+std::vector<vk::UniqueCommandBuffer> VulkanCommandPool::createCommandBuffers(const questart::VulkanDevice& device,
+                                                                             const uint32_t& count) const
+{
+    return ::createCommandBuffers(device.getDevice(), internal->commandPool.get(), count);
 }
