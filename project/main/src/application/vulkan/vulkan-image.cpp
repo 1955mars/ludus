@@ -131,6 +131,18 @@ namespace
                                                   barrier);
         }
 
+        // Scenario: undefined -> transfer destination optimal
+        if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eTransferDstOptimal)
+        {
+            barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+
+            return ::applyTransitionLayoutCommand(device,
+                                                  commandPool,
+                                                  vk::PipelineStageFlagBits::eTopOfPipe,
+                                                  vk::PipelineStageFlagBits::eTransfer,
+                                                  barrier);
+        }
+
         // An unknown combination might mean we need to add a new scenario to handle it.
         throw std::runtime_error("questart::VulkanImage::transitionLayout: Unsupported 'old' and 'new' image layout combination.");
     }

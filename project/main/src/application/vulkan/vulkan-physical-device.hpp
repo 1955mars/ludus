@@ -14,6 +14,7 @@ namespace questart
         vk::Format getDepthFormat() const;
         uint32_t getMemoryTypeIndex(const uint32_t& filter, const vk::MemoryPropertyFlags& flags) const;
         bool isShaderMultiSamplingSupported() const;
+        bool isAnisotropicFilteringSupported() const;
 
     private:
         struct Internal;

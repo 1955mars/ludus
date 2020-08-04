@@ -7,6 +7,7 @@
 #include "vulkan-mesh.hpp"
 #include "vulkan-physical-device.hpp"
 #include "vulkan-render-context.hpp"
+#include "vulkan-texture.hpp"
 
 namespace questart
 {
@@ -25,6 +26,8 @@ namespace questart
         void reloadContextualAssets(const questart::VulkanPhysicalDevice& physicalDevice,
                                     const questart::VulkanDevice& device,
                                     const questart::VulkanRenderContext& renderContext);
+
+        const questart::VulkanTexture& getTexture(const questart::assets::Texture& texture) const;
 
     private:
         struct Internal;

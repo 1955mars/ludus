@@ -150,6 +150,11 @@ namespace
         return physicalDevice.getFeatures().sampleRateShading;
     }
 
+    bool getAnisotropicFilteringSupport(const vk::PhysicalDevice& physicalDevice)
+    {
+        return physicalDevice.getFeatures().samplerAnisotropy;
+    }
+
 } // namespace
 
 struct VulkanPhysicalDevice::Internal
@@ -158,12 +163,14 @@ struct VulkanPhysicalDevice::Internal
     const vk::SampleCountFlagBits multiSamplingLevel;
     const vk::Format depthFormat;
     const bool shaderMultiSamplingSupported;
+    const bool anisotropicFilteringSupported;
 
     Internal(const vk::Instance& instance)
         : physicalDevice(::createPhysicalDevice(instance)),
           multiSamplingLevel(::getMultiSamplingLevel(physicalDevice)),
           depthFormat(::getDepthFormat(physicalDevice)),
-          shaderMultiSamplingSupported(::getShaderMultiSamplingSupport(physicalDevice)) {}
+          shaderMultiSamplingSupported(::getShaderMultiSamplingSupport(physicalDevice)),
+          anisotropicFilteringSupported(::getAnisotropicFilteringSupport(physicalDevice)) {}
 };
 
 VulkanPhysicalDevice::VulkanPhysicalDevice(const vk::Instance& instance)
@@ -192,4 +199,9 @@ uint32_t VulkanPhysicalDevice::getMemoryTypeIndex(const uint32_t& filter, const 
 bool VulkanPhysicalDevice::isShaderMultiSamplingSupported() const
 {
     return internal->shaderMultiSamplingSupported;
+}
+
+bool VulkanPhysicalDevice::isAnisotropicFilteringSupported() const
+{
+    return internal->anisotropicFilteringSupported;
 }

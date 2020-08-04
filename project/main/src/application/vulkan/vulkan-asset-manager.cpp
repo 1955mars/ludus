@@ -39,6 +39,26 @@ namespace
                                commandPool,
                                questart::assets::loadOBJFile(meshPath));
     }
+
+    questart::VulkanTexture createTexture(const questart::assets::Texture& texture,
+                                          const questart::VulkanPhysicalDevice& physicalDevice,
+                                          const questart::VulkanDevice& device,
+                                          const questart::VulkanCommandPool& commandPool,
+                                          const questart::VulkanRenderContext& renderContext)
+    {
+        std::string texturePath{questart::assets::resolveTexturePath(texture)};
+
+        questart::log("questart::VulkanAssetManager::createTexture", "Creating texture from " + texturePath);
+
+        questart::Bitmap bitmap{questart::assets::loadBitmap(texturePath)};
+
+        return questart::VulkanTexture(texture,
+                                       physicalDevice,
+                                       device,
+                                       commandPool,
+                                       bitmap);
+    }
+
 } // namespace
 
 
@@ -46,6 +66,7 @@ struct VulkanAssetManager::Internal
 {
     std::unordered_map<questart::assets::Pipeline, questart::VulkanPipeline> pipelineCache;
     std::unordered_map<questart::assets::StaticMesh, questart::VulkanMesh> staticMeshCache;
+    std::unordered_map<questart::assets::Texture, questart::VulkanTexture> textureCache;
 
     Internal() {}
 
@@ -74,6 +95,16 @@ struct VulkanAssetManager::Internal
                     ::createMesh(physicalDevice, device, commandPool, staticMesh)));
             }
         }
+
+        for (const auto& texture : assetManifest.textures)
+        {
+            if (textureCache.count(texture) == 0)
+            {
+                textureCache.insert(std::make_pair(
+                    texture,
+                    ::createTexture(texture, physicalDevice, device, commandPool, renderContext)));
+            }
+        }
     }
 
     void reloadContextualAssets(const questart::VulkanPhysicalDevice& physicalDevice,
@@ -85,6 +116,8 @@ struct VulkanAssetManager::Internal
             element.second = ::createPipeline(element.first, physicalDevice, device, renderContext);
         }
     }
+
+
 };
 
 VulkanAssetManager::VulkanAssetManager() : internal(questart::make_internal_ptr<Internal>()) {}
@@ -108,4 +141,9 @@ void VulkanAssetManager::reloadContextualAssets(const questart::VulkanPhysicalDe
 const questart::VulkanMesh& VulkanAssetManager::getStaticMesh(const questart::assets::StaticMesh& staticMesh) const
 {
     return internal->staticMeshCache.at(staticMesh);
+}
+
+const questart::VulkanTexture& VulkanAssetManager::getTexture(const questart::assets::Texture& texture) const
+{
+    return internal->textureCache.at(texture);
 }

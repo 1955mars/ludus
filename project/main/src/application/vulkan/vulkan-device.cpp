@@ -137,6 +137,12 @@ namespace
             physicalDeviceFeatures.sampleRateShading = true;
         }
 
+        // If anisotropic filtering is available we will activate it.
+        if (physicalDevice.isAnisotropicFilteringSupported())
+        {
+            physicalDeviceFeatures.samplerAnisotropy = true;
+        }
+
         // Take the queue and extension name configurations and form the device creation definition.
         vk::DeviceCreateInfo deviceCreateInfo{
             vk::DeviceCreateFlags(),                        // Flags
