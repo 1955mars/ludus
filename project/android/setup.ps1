@@ -147,6 +147,9 @@ Push-Location "$env:ANDROID_NDK\sources\third_party\vulkan\src\common"
     }
 Pop-Location
 
-Write-Host "All done - import the project in this folder into Android Studio to run it!"
+# Compile all Vulkan shaders
+Push-Location "..\main\vulkan_shader_source"
+    .\compile_shaders.ps1
+Pop-Location
 
 Write-Host "All done - import the project in this folder into Android Studio to run it!"

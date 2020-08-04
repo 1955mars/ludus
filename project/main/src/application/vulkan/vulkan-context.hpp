@@ -1,14 +1,16 @@
 #pragma once
 
+#include "../../core/asset-manifest.hpp"
 #include "../../core/internal_ptr.hpp"
 #include "../../core/renderer.hpp"
-#include "vulkan-asset-manager.hpp"
 
 namespace questart
 {
     struct VulkanContext : public questart::Renderer
     {
-        VulkanContext(std::shared_ptr<questart::VulkanAssetManager> assetManager);
+        VulkanContext();
+
+        void loadAssetManifest(const questart::AssetManifest& assetManifest);
 
         bool renderBegin();
 

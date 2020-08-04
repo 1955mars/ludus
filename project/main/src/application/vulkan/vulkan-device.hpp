@@ -27,6 +27,8 @@ namespace questart
         std::vector<vk::UniqueSemaphore> createSemaphores(const uint32_t& count) const;
         std::vector<vk::UniqueFence> createFences(const uint32_t& count) const;
 
+        vk::UniqueShaderModule createShaderModule(const std::vector<char>& shaderCode) const;
+
     private:
         struct Internal;
         questart::internal_ptr<Internal> internal;

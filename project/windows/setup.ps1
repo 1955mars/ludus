@@ -76,3 +76,8 @@ if (!(Test-Path "..\..\third-party\sdl-image-windows")) {
         Remove-Item -Path SDL2_image-devel-2.0.4-VC.zip
     Pop-Location
 }
+
+# Compile Vulkan shaders into SPIR-V binary assets.
+Push-Location -Path "../main/vulkan_shader_source"
+    .\compile_shaders.ps1
+Pop-Location

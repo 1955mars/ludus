@@ -357,3 +357,18 @@ questart::VulkanRenderContext VulkanRenderContext::recreate(const questart::SDLW
                                     commandPool,
                                     internal->swapchain.getSwapchain());
 }
+
+const vk::Viewport& VulkanRenderContext::getViewport() const
+{
+    return internal->viewport;
+}
+
+const vk::Rect2D& VulkanRenderContext::getScissor() const
+{
+    return internal->scissor;
+}
+
+const vk::RenderPass& VulkanRenderContext::getRenderPass() const
+{
+    return internal->renderPass.getRenderPass();
+}

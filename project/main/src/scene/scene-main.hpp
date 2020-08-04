@@ -9,7 +9,9 @@ namespace questart
     {
         SceneMain(const float& screenWidth, const float& screenHeight);
 
-        void prepare(questart::AssetManager& assetManager) override;
+        questart::AssetManifest getAssetManifest() override;
+
+        void prepare() override;
 
         void update(const float& delta) override;
 

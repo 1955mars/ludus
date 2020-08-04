@@ -145,6 +145,11 @@ namespace
         throw std::runtime_error("ast::VulkanImage::getMemoryTypeIndex: Failed to find suitable memory type.");
     }
 
+    bool getShaderMultiSamplingSupport(const vk::PhysicalDevice& physicalDevice)
+    {
+        return physicalDevice.getFeatures().sampleRateShading;
+    }
+
 } // namespace
 
 struct VulkanPhysicalDevice::Internal
@@ -152,11 +157,13 @@ struct VulkanPhysicalDevice::Internal
     const vk::PhysicalDevice physicalDevice;
     const vk::SampleCountFlagBits multiSamplingLevel;
     const vk::Format depthFormat;
+    const bool shaderMultiSamplingSupported;
 
     Internal(const vk::Instance& instance)
         : physicalDevice(::createPhysicalDevice(instance)),
           multiSamplingLevel(::getMultiSamplingLevel(physicalDevice)),
-          depthFormat(::getDepthFormat(physicalDevice)) {}
+          depthFormat(::getDepthFormat(physicalDevice)),
+          shaderMultiSamplingSupported(::getShaderMultiSamplingSupport(physicalDevice)) {}
 };
 
 VulkanPhysicalDevice::VulkanPhysicalDevice(const vk::Instance& instance)
@@ -180,4 +187,9 @@ vk::Format VulkanPhysicalDevice::getDepthFormat() const
 uint32_t VulkanPhysicalDevice::getMemoryTypeIndex(const uint32_t& filter, const vk::MemoryPropertyFlags& flags) const
 {
     return ::getMemoryTypeIndex(internal->physicalDevice, filter, flags);
+}
+
+bool VulkanPhysicalDevice::isShaderMultiSamplingSupported() const
+{
+    return internal->shaderMultiSamplingSupported;
 }

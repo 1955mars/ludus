@@ -23,12 +23,16 @@ struct SceneMain::Internal
     Internal(const float& screenWidth, const float& screenHeight)
         : camera(::createCamera(screenWidth, screenHeight)) {}
 
-    void prepare(questart::AssetManager& assetManager)
+    questart::AssetManifest getAssetManifest()
     {
-        assetManager.loadPipelines({Pipeline::Default});
-        assetManager.loadStaticMeshes({StaticMesh::Crate, StaticMesh::Torus});
-        assetManager.loadTextures({Texture::Crate, Texture::RedCrossHatch});
+        return questart::AssetManifest{
+            {Pipeline::Default},
+            {StaticMesh::Crate, StaticMesh::Torus},
+            {Texture::Crate, Texture::RedCrossHatch}};
+    }
 
+    void prepare()
+    {
         staticMeshes.push_back(questart::StaticMeshInstance{
             StaticMesh::Crate,           // Mesh
             Texture::Crate,              // Texture
@@ -83,9 +87,15 @@ struct SceneMain::Internal
 SceneMain::SceneMain(const float& screenWidth, const float& screenHeight)
     : internal(questart::make_internal_ptr<Internal>(screenWidth, screenHeight)) {}
 
-void SceneMain::prepare(questart::AssetManager& assetManager)
+questart::AssetManifest SceneMain::getAssetManifest()
 {
-    internal->prepare(assetManager);
+    return internal->getAssetManifest();
+}
+
+
+void SceneMain::prepare()
+{
+    internal->prepare();
 }
 
 void SceneMain::update(const float& delta)

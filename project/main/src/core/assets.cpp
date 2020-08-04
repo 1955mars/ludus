@@ -112,3 +112,24 @@ questart::Bitmap questart::assets::loadBitmap(const std::string& path)
 
     return questart::Bitmap(target);
 }
+
+std::vector<char> questart::assets::loadBinaryFile(const std::string& path)
+{
+    // Open a file operation handle to the asset file.
+    SDL_RWops* file{SDL_RWFromFile(path.c_str(), "rb")};
+
+    // Determine how big the file is.
+    size_t fileLength{static_cast<size_t>(SDL_RWsize(file))};
+
+    // Ask SDL to load the content of the file into a data pointer.
+    char* data{static_cast<char*>(SDL_LoadFile_RW(file, nullptr, 1))};
+
+    // Make a copy of the data as a vector of characters.
+    std::vector<char> result(data, data + fileLength);
+
+    // Let SDL free the data memory (we took a copy into a vector).
+    SDL_free(data);
+
+    // Hand back the resulting vector which is the content of the file.
+    return result;
+}

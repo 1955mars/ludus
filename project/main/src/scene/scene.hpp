@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../core/asset-manager.hpp"
+#include "../core/asset-manifest.hpp"
 #include "../core/renderer.hpp"
 
 namespace questart
@@ -11,7 +11,9 @@ namespace questart
 
         virtual ~Scene() = default;
 
-        virtual void prepare(questart::AssetManager& assetManager) = 0;
+        virtual questart::AssetManifest getAssetManifest() = 0;
+
+        virtual void prepare() = 0;
 
         virtual void update(const float& delta) = 0;
 

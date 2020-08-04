@@ -5,6 +5,7 @@
 #include "vulkan-device.hpp"
 #include "vulkan-render-context.hpp"
 #include "vulkan-command-pool.hpp"
+#include "vulkan-asset-manager.hpp"
 #include "../../core/graphics-wrapper.hpp"
 #include "../../core/log.hpp"
 #include "../../core/sdl-window.hpp"
@@ -95,7 +96,6 @@ namespace
 
 struct VulkanContext::Internal
 {
-    const std::shared_ptr<questart::VulkanAssetManager> assetManager;
     const vk::UniqueInstance instance;
     const questart::VulkanPhysicalDevice physicalDevice;
     const questart::SDLWindow window;
@@ -103,18 +103,24 @@ struct VulkanContext::Internal
     const questart::VulkanDevice device;
     const questart::VulkanCommandPool commandPool;
     questart::VulkanRenderContext renderContext;
+    questart::VulkanAssetManager assetManager;
 
-    Internal(std::shared_ptr<questart::VulkanAssetManager> assetManager) 
-               : assetManager(assetManager),
-                 instance(::createInstance()),
+    Internal() 
+               : instance(::createInstance()),
                  physicalDevice(questart::VulkanPhysicalDevice(*instance)),
                  window(questart::SDLWindow(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI)),
                  surface(questart::VulkanSurface(*instance, physicalDevice, window)),
                  device(questart::VulkanDevice(physicalDevice, surface)),
                  commandPool(questart::VulkanCommandPool(device)),
-                 renderContext(questart::VulkanRenderContext(window, physicalDevice, device, surface, commandPool))
+                 renderContext(questart::VulkanRenderContext(window, physicalDevice, device, surface, commandPool)),
+                 assetManager(questart::VulkanAssetManager())
     {
         questart::log("questart::VulkanContext", "Initialized Vulkan context successfully.");
+    }
+
+    void loadAssetManifest(const questart::AssetManifest& assetManifest)
+    {
+        assetManager.loadAssetManifest(physicalDevice, device, renderContext, assetManifest);
     }
 
     bool renderBegin()
@@ -145,11 +151,16 @@ struct VulkanContext::Internal
     {
         device.getDevice().waitIdle();
         renderContext = renderContext.recreate(window, physicalDevice, device, surface, commandPool);
+        assetManager.reloadContextualAssets(physicalDevice, device, renderContext);
     }
 };
 
-VulkanContext::VulkanContext(std::shared_ptr<questart::VulkanAssetManager> assetManager)
-    : internal(questart::make_internal_ptr<Internal>(assetManager)) {}
+VulkanContext::VulkanContext() : internal(questart::make_internal_ptr<Internal>()) {}
+
+void VulkanContext::loadAssetManifest(const questart::AssetManifest& assetManifest)
+{
+    internal->loadAssetManifest(assetManifest);
+}
 
 bool VulkanContext::renderBegin()
 {

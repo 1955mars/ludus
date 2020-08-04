@@ -44,15 +44,19 @@ namespace
         return questart::OpenGLRenderer(assetManager);
     }
 
-    std::unique_ptr<questart::Scene> createMainScene(questart::AssetManager& assetManager)
+    std::unique_ptr<questart::Scene> createMainScene(questart::OpenGLAssetManager& assetManager)
     {
         std::pair<uint32_t, uint32_t> displaySize{questart::sdl::getDisplaySize()};
         std::unique_ptr<questart::Scene> scene{std::make_unique<questart::SceneMain>(
             static_cast<float>(displaySize.first),
             static_cast<float>(displaySize.second))};
-        scene->prepare(assetManager);
+
+        assetManager.loadAssetManifest(scene->getAssetManifest());
+        scene->prepare();
+
         return scene;
     }
+
 }// namespace
 
 struct OpenGLApplication::Internal

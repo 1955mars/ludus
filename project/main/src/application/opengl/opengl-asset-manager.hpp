@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../core/asset-manager.hpp"
+#include "../../core/asset-manifest.hpp"
 #include "../../core/internal_ptr.hpp"
 #include "opengl-mesh.hpp"
 #include "opengl-pipeline.hpp"
@@ -8,15 +8,11 @@
 
 namespace questart
 {
-    struct OpenGLAssetManager : public questart::AssetManager
+    struct OpenGLAssetManager
     {
         OpenGLAssetManager();
 
-        void loadPipelines(const std::vector<questart::assets::Pipeline>& pipelines) override;
-
-        void loadStaticMeshes(const std::vector<questart::assets::StaticMesh>& staticMeshes) override;
-
-        void loadTextures(const std::vector<questart::assets::Texture>& textures) override;
+        void loadAssetManifest(const questart::AssetManifest& assetManifest);
 
         const questart::OpenGLPipeline& getPipeline(const questart::assets::Pipeline& pipeline) const;
 

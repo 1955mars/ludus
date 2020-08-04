@@ -128,6 +128,15 @@ namespace
         // We also need to request the swapchain extension be activated as we will need to use a swapchain
         std::vector<const char*> extensionNames{VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
+        // Specify which physical device features to expose in our logical device
+        vk::PhysicalDeviceFeatures physicalDeviceFeatures;
+
+        // If shader based multisampling is available we will activate it.
+        if (physicalDevice.isShaderMultiSamplingSupported())
+        {
+            physicalDeviceFeatures.sampleRateShading = true;
+        }
+
         // Take the queue and extension name configurations and form the device creation definition.
         vk::DeviceCreateInfo deviceCreateInfo{
             vk::DeviceCreateFlags(),                        // Flags
@@ -137,7 +146,7 @@ namespace
             nullptr,                                        // Enabled layer names
             static_cast<uint32_t>(extensionNames.size()),   // Enabled extension count
             extensionNames.data(),                          // Enabled extension names
-            nullptr                                         // Physical device features
+            &physicalDeviceFeatures                         // Physical device features
         };
 
         // Create a logical device with all the configuration we collated.
@@ -174,6 +183,17 @@ namespace
         }
 
         return fences;
+    }
+
+    
+    vk::UniqueShaderModule createShaderModule(const vk::Device& device, const std::vector<char>& shaderCode)
+    {
+        vk::ShaderModuleCreateInfo info{
+            vk::ShaderModuleCreateFlags(),                         // Flags
+            shaderCode.size(),                                     // Code size
+            reinterpret_cast<const uint32_t*>(shaderCode.data())}; // Code
+
+        return device.createShaderModuleUnique(info);
     }
 
 } // namespace
@@ -239,4 +259,9 @@ std::vector<vk::UniqueSemaphore> VulkanDevice::createSemaphores(const uint32_t& 
 std::vector<vk::UniqueFence> VulkanDevice::createFences(const uint32_t& count) const
 {
     return ::createFences(internal->device.get(), count);
+}
+
+vk::UniqueShaderModule VulkanDevice::createShaderModule(const std::vector<char>& shaderCode) const
+{
+    return ::createShaderModule(internal->device.get(), shaderCode);
 }

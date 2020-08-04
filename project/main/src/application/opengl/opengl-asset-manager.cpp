@@ -12,6 +12,13 @@ struct OpenGLAssetManager::Internal
 
     Internal() {}
 
+    void loadAssetManifest(const questart::AssetManifest& assetManifest)
+    {
+        loadPipelines(assetManifest.pipelines);
+        loadStaticMeshes(assetManifest.staticMeshes);
+        loadTextures(assetManifest.textures);
+    }
+
     void loadPipelines(const std::vector<questart::assets::Pipeline>& pipelines)
     {
         for (const auto& pipeline : pipelines)
@@ -54,19 +61,10 @@ struct OpenGLAssetManager::Internal
 
 OpenGLAssetManager::OpenGLAssetManager() : internal(questart::make_internal_ptr<Internal>()) {}
 
-void OpenGLAssetManager::loadPipelines(const std::vector<questart::assets::Pipeline>& pipelines)
-{
-    internal->loadPipelines(pipelines);
-}
 
-void OpenGLAssetManager::loadStaticMeshes(const std::vector<questart::assets::StaticMesh>& staticMeshes)
+void OpenGLAssetManager::loadAssetManifest(const questart::AssetManifest& assetManifest)
 {
-    internal->loadStaticMeshes(staticMeshes);
-}
-
-void OpenGLAssetManager::loadTextures(const std::vector<questart::assets::Texture>& textures)
-{
-    internal->loadTextures(textures);
+    internal->loadAssetManifest(assetManifest);
 }
 
 const questart::OpenGLPipeline& OpenGLAssetManager::getPipeline(const questart::assets::Pipeline& pipeline) const
