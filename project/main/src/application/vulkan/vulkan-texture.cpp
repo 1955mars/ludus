@@ -254,6 +254,11 @@ VulkanTexture::VulkanTexture(const questart::assets::Texture& textureId,
                                                 commandPool,
                                                 bitmap)) {}
 
+const questart::assets::Texture& VulkanTexture::getTextureId() const
+{
+    return internal->textureId;
+}
+
 const questart::VulkanImageView& VulkanTexture::getImageView() const
 {
     return internal->imageView;

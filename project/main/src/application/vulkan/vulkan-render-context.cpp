@@ -228,7 +228,7 @@ struct VulkanRenderContext::Internal
         }
 
         // Grab the command buffer to use for the current swapchain image index.
-        const vk::CommandBuffer& commandBuffer{commandBuffers[currentSwapchainImageIndex].get()};
+        const vk::CommandBuffer& commandBuffer{getActiveCommandBuffer()};
 
         // Reset the command buffer to a fresh state.
         commandBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
@@ -267,7 +267,7 @@ struct VulkanRenderContext::Internal
     bool renderEnd(const questart::VulkanDevice& device)
     {
         // Grab the command buffer to use for the current swapchain image index.
-        const vk::CommandBuffer& commandBuffer{commandBuffers[currentSwapchainImageIndex].get()};
+        const vk::CommandBuffer& commandBuffer{getActiveCommandBuffer()};
 
         // Request the command buffer to end its recording phase.
         commandBuffer.endRenderPass();
@@ -324,6 +324,11 @@ struct VulkanRenderContext::Internal
 
         return true;
     }
+
+    const vk::CommandBuffer& getActiveCommandBuffer() const
+    {
+        return commandBuffers[currentSwapchainImageIndex].get();
+    }
 };
 
 VulkanRenderContext::VulkanRenderContext(const questart::SDLWindow& window,
@@ -371,4 +376,9 @@ const vk::Rect2D& VulkanRenderContext::getScissor() const
 const vk::RenderPass& VulkanRenderContext::getRenderPass() const
 {
     return internal->renderPass.getRenderPass();
+}
+
+const vk::CommandBuffer& VulkanRenderContext::getActiveCommandBuffer() const
+{
+    return internal->getActiveCommandBuffer();
 }

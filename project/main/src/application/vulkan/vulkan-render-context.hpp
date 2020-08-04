@@ -35,6 +35,8 @@ namespace questart
 
         const vk::RenderPass& getRenderPass() const;
 
+        const vk::CommandBuffer& getActiveCommandBuffer() const;
+
     private:
         struct Internal;
         questart::internal_ptr<Internal> internal;

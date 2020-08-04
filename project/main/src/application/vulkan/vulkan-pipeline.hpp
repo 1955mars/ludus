@@ -21,9 +21,10 @@ namespace questart
                        const vk::Rect2D& scissor,
                        const vk::RenderPass& renderPass);
 
-        void render(
-            const questart::VulkanAssetManager& assetManager,
-            const std::vector<questart::StaticMeshInstance>& staticMeshInstances) const;
+        void render(const questart::VulkanDevice& device,
+                    const vk::CommandBuffer& commandBuffer,
+                    const questart::VulkanAssetManager& assetManager,
+                    const std::vector<questart::StaticMeshInstance>& staticMeshInstances) const;
 
     private:
         struct Internal;

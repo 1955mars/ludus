@@ -8,6 +8,7 @@
 #include "vulkan-physical-device.hpp"
 #include "vulkan-render-context.hpp"
 #include "vulkan-texture.hpp"
+#include "vulkan-pipeline.hpp"
 
 namespace questart
 {
@@ -28,6 +29,8 @@ namespace questart
                                     const questart::VulkanRenderContext& renderContext);
 
         const questart::VulkanTexture& getTexture(const questart::assets::Texture& texture) const;
+
+        const questart::VulkanPipeline& getPipeline(const questart::assets::Pipeline& pipeline) const;
 
     private:
         struct Internal;

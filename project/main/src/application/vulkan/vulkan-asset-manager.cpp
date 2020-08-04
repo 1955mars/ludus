@@ -147,3 +147,8 @@ const questart::VulkanTexture& VulkanAssetManager::getTexture(const questart::as
 {
     return internal->textureCache.at(texture);
 }
+
+const questart::VulkanPipeline& VulkanAssetManager::getPipeline(const questart::assets::Pipeline& pipeline) const
+{
+    return internal->pipelineCache.at(pipeline);
+}

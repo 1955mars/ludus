@@ -1,6 +1,11 @@
 #include "vulkan-pipeline.hpp"
+#include "../../core/asset-inventory.hpp"
 #include "../../core/assets.hpp"
 #include "../../core/vertex.hpp"
+#include "vulkan-mesh.hpp"
+#include "vulkan-texture.hpp"
+#include "vulkan-asset-manager.hpp"
+#include <unordered_map>
 
 using questart::VulkanPipeline;
 
@@ -235,6 +240,61 @@ namespace
 
         return device.getDevice().createGraphicsPipelineUnique(nullptr, pipelineCreateInfo);
     }
+
+    vk::UniqueDescriptorPool createDescriptorPool(const questart::VulkanDevice& device)
+    {
+        const uint32_t maxDescriptors{64};
+
+        vk::DescriptorPoolSize combinedImageSamplerPoolSize{
+            vk::DescriptorType::eCombinedImageSampler, // Type
+            maxDescriptors};                           // Max descriptor count
+
+        std::array<vk::DescriptorPoolSize, 1> poolSizes{combinedImageSamplerPoolSize};
+
+        vk::DescriptorPoolCreateInfo info{
+            vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, // Flags
+            maxDescriptors,                                       // Max sets
+            static_cast<uint32_t>(poolSizes.size()),              // Pool size count
+            poolSizes.data()};                                    // Pool sizes
+
+        return device.getDevice().createDescriptorPoolUnique(info);
+    }
+
+    vk::UniqueDescriptorSet createTextureSamplerDescriptorSet(const questart::VulkanDevice& device,
+                                                              const vk::DescriptorPool& descriptorPool,
+                                                              const vk::DescriptorSetLayout& descriptorSetLayout,
+                                                              const questart::VulkanTexture& texture)
+    {
+        vk::DescriptorSetAllocateInfo createInfo{
+            descriptorPool,        // Descriptor pool
+            1,                     // Descriptor set count
+            &descriptorSetLayout}; // Descriptor set layouts
+
+        vk::UniqueDescriptorSet descriptorSet{
+            std::move(device.getDevice().allocateDescriptorSetsUnique(createInfo)[0])};
+
+        vk::DescriptorImageInfo imageInfo{
+            texture.getSampler(),                     // Sampler
+            texture.getImageView().getImageView(),    // Image view
+            vk::ImageLayout::eShaderReadOnlyOptimal}; // Image layout
+
+        vk::WriteDescriptorSet writeInfo{
+            descriptorSet.get(),                       // Destination set
+            0,                                         // Destination binding
+            0,                                         // Destination array element
+            1,                                         // Descriptor count
+            vk::DescriptorType::eCombinedImageSampler, // Descriptor type
+            &imageInfo,                                // Image info
+            nullptr,                                   // Buffer info
+            nullptr};                                  // Texel buffer view
+
+        device.getDevice().updateDescriptorSets(1, &writeInfo, 0, nullptr);
+
+        return descriptorSet;
+    }
+
+
+
 } // namespace
 
 struct VulkanPipeline::Internal
@@ -242,6 +302,8 @@ struct VulkanPipeline::Internal
     const vk::UniqueDescriptorSetLayout descriptorSetLayout;
     const vk::UniquePipelineLayout pipelineLayout;
     const vk::UniquePipeline pipeline;
+    const vk::UniqueDescriptorPool descriptorPool;
+    std::unordered_map<questart::assets::Texture, vk::UniqueDescriptorSet> textureSamplerDescriptorSets;
 
     Internal(const questart::VulkanPhysicalDevice& physicalDevice,
              const questart::VulkanDevice& device,
@@ -257,12 +319,61 @@ struct VulkanPipeline::Internal
                                     shaderName,
                                     viewport,
                                     scissor,
-                                    renderPass)) {}
+                                    renderPass)),
+          descriptorPool(::createDescriptorPool(device)) {}
 
-    void render(const questart::VulkanAssetManager& assetManager,
-                const std::vector<questart::StaticMeshInstance>& staticMeshInstances) const
+    const vk::DescriptorSet& getTextureSamplerDescriptorSet(const questart::VulkanDevice& device,
+                                                            const questart::VulkanTexture& texture)
     {
-        // TODO: Implement me.
+        if (textureSamplerDescriptorSets.count(texture.getTextureId()) == 0)
+        {
+            textureSamplerDescriptorSets.insert(std::make_pair(
+                texture.getTextureId(),
+                ::createTextureSamplerDescriptorSet(device,
+                                                    descriptorPool.get(),
+                                                    descriptorSetLayout.get(),
+                                                    texture)));
+        }
+
+        return textureSamplerDescriptorSets.at(texture.getTextureId()).get();
+    }
+
+    void render(const questart::VulkanDevice& device,
+                const vk::CommandBuffer& commandBuffer,
+                const questart::VulkanAssetManager& assetManager,
+                const std::vector<questart::StaticMeshInstance>& staticMeshInstances)
+    {
+        for (const questart::StaticMeshInstance& meshInstance : staticMeshInstances)
+        {
+            const questart::VulkanMesh& mesh{assetManager.getStaticMesh(meshInstance.getMesh())};
+            const glm::mat4& transform{meshInstance.getTransformMatrix()};
+
+            commandBuffer.pushConstants(pipelineLayout.get(),
+                                        vk::ShaderStageFlagBits::eAllGraphics,
+                                        0,
+                                        sizeof(glm::mat4),
+                                        &transform);
+
+            commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.get());
+
+            vk::DeviceSize offsets[]{0};
+            commandBuffer.bindVertexBuffers(0, 1, &mesh.getVertexBuffer(), offsets);
+
+            commandBuffer.bindIndexBuffer(mesh.getIndexBuffer(), 0, vk::IndexType::eUint32);
+
+            const questart::VulkanTexture& texture{assetManager.getTexture(meshInstance.getTexture())};
+
+            const vk::DescriptorSet& textureSamplerDescriptorSet{
+                getTextureSamplerDescriptorSet(device, texture)};
+
+            commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                                             pipelineLayout.get(),
+                                             0,
+                                             1, &textureSamplerDescriptorSet,
+                                             0, nullptr);
+
+            commandBuffer.drawIndexed(mesh.getNumIndices(), 1, 0, 0, 0);
+        }
     }
 };
 
@@ -274,8 +385,10 @@ VulkanPipeline::VulkanPipeline(const questart::VulkanPhysicalDevice& physicalDev
                                const vk::RenderPass& renderPass)
     : internal(questart::make_internal_ptr<Internal>(physicalDevice, device, shaderName, viewport, scissor, renderPass)) {}
 
-void VulkanPipeline::render(const questart::VulkanAssetManager& assetManager,
+void VulkanPipeline::render(const questart::VulkanDevice& device,
+                            const vk::CommandBuffer& commandBuffer,
+                            const questart::VulkanAssetManager& assetManager,
                             const std::vector<questart::StaticMeshInstance>& staticMeshInstances) const
 {
-    internal->render(assetManager, staticMeshInstances);
+    internal->render(device, commandBuffer, assetManager, staticMeshInstances);
 }

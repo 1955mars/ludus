@@ -99,5 +99,5 @@ target_link_libraries(
 	sdl2
 	sdl2_image
 	${log-lib}
-	GLESv2
+	GLESv3
 )

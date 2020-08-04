@@ -136,7 +136,10 @@ struct VulkanContext::Internal
     void render(const questart::assets::Pipeline& pipeline,
                 const std::vector<questart::StaticMeshInstance>& staticMeshInstances)
     {
-        // TODO: Implement me
+        assetManager.getPipeline(pipeline).render(device,
+                                                  renderContext.getActiveCommandBuffer(),
+                                                  assetManager,
+                                                  staticMeshInstances);
     }
 
     void renderEnd()
