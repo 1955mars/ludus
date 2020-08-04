@@ -12,6 +12,10 @@ namespace questart
         const std::vector<questart::Vertex>& getVertices() const;
         const std::vector<uint32_t>& getIndices() const;
 
+        const uint32_t& getNumVertices() const;
+
+        const uint32_t& getNumIndices() const;
+
     private:
         struct Internal;
         questart::internal_ptr<Internal> internal;

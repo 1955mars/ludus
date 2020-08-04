@@ -120,7 +120,7 @@ struct VulkanContext::Internal
 
     void loadAssetManifest(const questart::AssetManifest& assetManifest)
     {
-        assetManager.loadAssetManifest(physicalDevice, device, renderContext, assetManifest);
+        assetManager.loadAssetManifest(physicalDevice, device, renderContext, commandPool, assetManifest);
     }
 
     bool renderBegin()
