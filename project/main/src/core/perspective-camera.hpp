@@ -5,11 +5,15 @@
 
 namespace questart
 {
-	struct PerspectiveCamera
+    struct PerspectiveCamera
     {
         PerspectiveCamera(const float& width, const float& height);
-        const glm::mat4& getProjectionMatrix() const;
-        const glm::mat4& getViewMatrix() const;
+
+        void configure(const glm::vec3& position, const glm::vec3& direction);
+
+        glm::mat4 getProjectionMatrix() const;
+
+        glm::mat4 getViewMatrix() const;
 
     private:
         struct Internal;

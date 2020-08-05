@@ -1,6 +1,8 @@
 #include "scene-main.hpp"
 #include "../core/perspective-camera.hpp"
 #include "../core/static-mesh-instance.hpp"
+#include "../core/sdl-wrapper.hpp"
+#include "player.hpp"
 
 using questart::SceneMain;
 using questart::assets::Pipeline;
@@ -19,9 +21,13 @@ struct SceneMain::Internal
 {
     questart::PerspectiveCamera camera;
     std::vector<questart::StaticMeshInstance> staticMeshes;
+    questart::Player player;
+    const uint8_t* keyboardState;
 
     Internal(const questart::WindowSize& size)
-        : camera(::createCamera(size)) {}
+        : camera(::createCamera(size)),
+          player(questart::Player(glm::vec3{0.0f, 0.0f, 2.0f})),
+          keyboardState(SDL_GetKeyboardState(nullptr)) {}
 
     questart::AssetManifest getAssetManifest()
     {
@@ -69,6 +75,10 @@ struct SceneMain::Internal
 
     void update(const float& delta)
     {
+        processInput(delta);
+
+        camera.configure(player.getPosition(), player.getDirection());
+
         const glm::mat4 cameraMatrix{camera.getProjectionMatrix() * camera.getViewMatrix()};
 
         for (auto& staticMesh : staticMeshes)
@@ -86,6 +96,39 @@ struct SceneMain::Internal
     void onWindowResized(const questart::WindowSize& size)
     {
         camera = ::createCamera(size);
+    }
+
+    void processInput(const float& delta)
+    {
+        if (keyboardState[SDL_SCANCODE_UP])
+        {
+            player.moveForward(delta);
+        }
+
+        if (keyboardState[SDL_SCANCODE_DOWN])
+        {
+            player.moveBackward(delta);
+        }
+
+        if (keyboardState[SDL_SCANCODE_A])
+        {
+            player.moveUp(delta);
+        }
+
+        if (keyboardState[SDL_SCANCODE_Z])
+        {
+            player.moveDown(delta);
+        }
+
+        if (keyboardState[SDL_SCANCODE_LEFT])
+        {
+            player.turnLeft(delta);
+        }
+
+        if (keyboardState[SDL_SCANCODE_RIGHT])
+        {
+            player.turnRight(delta);
+        }
     }
 };
 
