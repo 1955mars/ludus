@@ -10,6 +10,18 @@ using questart::OpenGLApplication;
 
 namespace
 {
+    void updateViewport(SDL_Window* window)
+    {
+        static const std::string logTag{"questart::OpenGLApplication::updateViewport"};
+
+        int viewportWidth;
+        int viewportHeight;
+        SDL_GL_GetDrawableSize(window, &viewportWidth, &viewportHeight);
+        questart::log(logTag, "Created OpenGL context with viewport size: " + std::to_string(viewportWidth) + " x " + std::to_string(viewportHeight));
+
+        glViewport(0, 0, viewportWidth, viewportHeight);
+    }
+
     SDL_GLContext createContext(SDL_Window* window)
     {
         static const std::string logTag{"questart::OpenGLApplication::createContext"};
@@ -20,16 +32,12 @@ namespace
         glewInit();
 #endif //  WIN32
 
-        int viewPortWidth;
-        int viewPortHeight;
-        SDL_GL_GetDrawableSize(window, &viewPortWidth, &viewPortHeight);
-        questart::log(logTag, "Created OpenGL context with viewport size: " + std::to_string(viewPortWidth) + " x " + std::to_string(viewPortHeight));
 
         glClearDepthf(1.0f);
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
         glEnable(GL_CULL_FACE);
-        glViewport(0, 0, viewPortWidth, viewPortHeight);
+        ::updateViewport(window);
 
         return context;
     }
@@ -44,13 +52,9 @@ namespace
         return questart::OpenGLRenderer(assetManager);
     }
 
-    std::unique_ptr<questart::Scene> createMainScene(questart::OpenGLAssetManager& assetManager)
+    std::unique_ptr<questart::Scene> createMainScene(const questart::SDLWindow& window, questart::OpenGLAssetManager& assetManager)
     {
-        std::pair<uint32_t, uint32_t> displaySize{questart::sdl::getDisplaySize()};
-        std::unique_ptr<questart::Scene> scene{std::make_unique<questart::SceneMain>(
-            static_cast<float>(displaySize.first),
-            static_cast<float>(displaySize.second))};
-
+        std::unique_ptr<questart::Scene> scene{std::make_unique<questart::SceneMain>(questart::sdl::getWindowSize(window.getWindow()))};
         assetManager.loadAssetManifest(scene->getAssetManifest());
         scene->prepare();
 
@@ -81,7 +85,7 @@ struct OpenGLApplication::Internal
     {
         if (!scene)
         {
-            scene = ::createMainScene(*assetManager);
+            scene = ::createMainScene(window, *assetManager);
         }
 
         return *scene;
@@ -97,6 +101,12 @@ struct OpenGLApplication::Internal
         getScene().render(renderer);
 
         SDL_GL_SwapWindow(window.getWindow());
+    }
+
+    void onWindowResized()
+    {
+        getScene().onWindowResized(questart::sdl::getWindowSize(window.getWindow()));
+        ::updateViewport(window.getWindow());
     }
 
     ~Internal()
@@ -116,4 +126,9 @@ void OpenGLApplication::update(const float& delta)
 void OpenGLApplication::render()
 {
     internal->render();
+}
+
+void OpenGLApplication::onWindowResized()
+{
+    internal->onWindowResized();
 }

@@ -3,6 +3,7 @@
 #include "../../core/asset-manifest.hpp"
 #include "../../core/internal_ptr.hpp"
 #include "../../core/renderer.hpp"
+#include "../../core/window-size.hpp"
 
 namespace questart
 {
@@ -19,6 +20,8 @@ namespace questart
             const std::vector<questart::StaticMeshInstance>& staticMeshInstances) override;
 
         void renderEnd();
+
+        questart::WindowSize getCurrentWindowSize() const;
 
     private:
         struct Internal;

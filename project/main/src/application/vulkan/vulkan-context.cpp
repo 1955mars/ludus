@@ -180,3 +180,8 @@ void VulkanContext::renderEnd()
 {
     internal->renderEnd();
 }
+
+questart::WindowSize VulkanContext::getCurrentWindowSize() const
+{
+    return questart::sdl::getWindowSize(internal->window.getWindow());
+}

@@ -10,11 +10,7 @@ namespace
 {
     std::unique_ptr<questart::Scene> createMainScene(questart::VulkanContext& context)
     {
-        std::pair<uint32_t, uint32_t> displaySize{questart::sdl::getDisplaySize()};
-        std::unique_ptr<questart::Scene> scene{std::make_unique<questart::SceneMain>(
-            static_cast<float>(displaySize.first),
-            static_cast<float>(displaySize.second))};
-
+        std::unique_ptr<questart::Scene> scene{std::make_unique<questart::SceneMain>(context.getCurrentWindowSize())};
         context.loadAssetManifest(scene->getAssetManifest());
         scene->prepare();
 
@@ -52,6 +48,11 @@ struct VulkanApplication::Internal
             context.renderEnd();
         }
     }
+
+    void onWindowResized()
+    {
+        getScene().onWindowResized(context.getCurrentWindowSize());
+    }
 };
 
 VulkanApplication::VulkanApplication() : internal(questart::make_internal_ptr<Internal>()) {}
@@ -64,4 +65,9 @@ void VulkanApplication::update(const float& delta)
 void VulkanApplication::render()
 {
     internal->render();
+}
+
+void VulkanApplication::onWindowResized()
+{
+    internal->onWindowResized();
 }

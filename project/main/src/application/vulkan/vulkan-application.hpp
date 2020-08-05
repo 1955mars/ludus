@@ -13,6 +13,8 @@ namespace questart
 
         void render() override;
 
+        void onWindowResized() override;
+
     private:
         struct Internal;
         questart::internal_ptr<Internal> internal;

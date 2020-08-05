@@ -9,9 +9,9 @@ using questart::assets::Texture;
 
 namespace
 {
-    questart::PerspectiveCamera createCamera(const float& width, const float& height)
+    questart::PerspectiveCamera createCamera(const questart::WindowSize& size)
     {
-        return questart::PerspectiveCamera(width, height);
+        return questart::PerspectiveCamera(static_cast<float>(size.width), static_cast<float>(size.height));
     }
 } // namespace
 
@@ -20,8 +20,8 @@ struct SceneMain::Internal
     questart::PerspectiveCamera camera;
     std::vector<questart::StaticMeshInstance> staticMeshes;
 
-    Internal(const float& screenWidth, const float& screenHeight)
-        : camera(::createCamera(screenWidth, screenHeight)) {}
+    Internal(const questart::WindowSize& size)
+        : camera(::createCamera(size)) {}
 
     questart::AssetManifest getAssetManifest()
     {
@@ -82,10 +82,15 @@ struct SceneMain::Internal
     {
         renderer.render(Pipeline::Default, staticMeshes);
     }
+
+    void onWindowResized(const questart::WindowSize& size)
+    {
+        camera = ::createCamera(size);
+    }
 };
 
-SceneMain::SceneMain(const float& screenWidth, const float& screenHeight)
-    : internal(questart::make_internal_ptr<Internal>(screenWidth, screenHeight)) {}
+SceneMain::SceneMain(const questart::WindowSize& size)
+    : internal(questart::make_internal_ptr<Internal>(size)) {}
 
 questart::AssetManifest SceneMain::getAssetManifest()
 {
@@ -106,4 +111,9 @@ void SceneMain::update(const float& delta)
 void SceneMain::render(questart::Renderer& renderer)
 {
     internal->render(renderer);
+}
+
+void SceneMain::onWindowResized(const questart::WindowSize& size)
+{
+    internal->onWindowResized(size);
 }

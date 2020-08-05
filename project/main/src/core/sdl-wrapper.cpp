@@ -15,46 +15,45 @@ namespace
 	}
 }
 
-std::pair<uint32_t, uint32_t> questart::sdl::getDisplaySize()
+questart::WindowSize questart::sdl::getWindowSize(SDL_Window* window)
 {
-	uint32_t displayWidth{ 0 };
-	uint32_t displayHeight{ 0 };
+    int width{0};
+    int height{0};
+    SDL_GetWindowSize(window, &width, &height);
+    return questart::WindowSize{static_cast<uint32_t>(width), static_cast<uint32_t>(height)};
+}
 
-	switch (questart::getCurrentPlatform())
-	{
-        case questart::Platform::android:
-        {
-            // For mobile platforms we will fetch the full screen size.
-            SDL_DisplayMode displayMode;
-            SDL_GetDesktopDisplayMode(0, &displayMode);
-            displayWidth = static_cast<uint32_t>(displayMode.w);
-            displayHeight = static_cast<uint32_t>(displayMode.h);
-            break;
-		}
-		default:
-		{
-			displayWidth = 640;
-			displayHeight = 480;
-			break;
-		}
-	}
-	return std::make_pair(displayWidth, displayHeight);
+
+questart::WindowSize questart::sdl::getInitialWindowSize()
+{
+    const questart::Platform platform{questart::getCurrentPlatform()};
+
+    if (platform == questart::Platform::android)
+    {
+        // For mobile platforms we will fetch the full screen size.
+        SDL_DisplayMode displayMode;
+        SDL_GetDesktopDisplayMode(0, &displayMode);
+        return questart::WindowSize{static_cast<uint32_t>(displayMode.w), static_cast<uint32_t>(displayMode.h)};
+    }
+
+    // For other platforms we'll just show a fixed size window.
+    return questart::WindowSize{640, 480};
 }
 
 SDL_Window* questart::sdl::createWindow(const uint32_t& windowFlags)
 {
-	std::pair<uint32_t, uint32_t> displaySize{ questart::sdl::getDisplaySize() };
+    questart::WindowSize windowSize{questart::sdl::getInitialWindowSize()};
 
-	SDL_Window* window{ SDL_CreateWindow(
-		"A Simple Triangle",
-		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-		displaySize.first, displaySize.second,
-		windowFlags) };
+    SDL_Window* window{SDL_CreateWindow(
+        "A Simple Triangle",
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        windowSize.width, windowSize.height,
+        windowFlags)};
 
-	if (::shouldDisplayFullScreen())
-	{
-		SDL_SetWindowFullscreen(window, SDL_TRUE);
-	}
+    if (::shouldDisplayFullScreen())
+    {
+        SDL_SetWindowFullscreen(window, SDL_TRUE);
+    }
 
-	return window;
+    return window;
 }

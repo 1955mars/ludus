@@ -3,10 +3,13 @@
 #include <SDL.h>
 #include <SDL_vulkan.h>
 #include <utility>
+#include "window-size.hpp"
 
 namespace questart::sdl
 {
-	std::pair<uint32_t, uint32_t> getDisplaySize();
+    questart::WindowSize getInitialWindowSize();
+
+    questart::WindowSize getWindowSize(SDL_Window* window);
 
 	SDL_Window* createWindow(const uint32_t& windowFlags);
 }

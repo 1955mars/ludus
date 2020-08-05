@@ -17,6 +17,8 @@ namespace questart
 
         virtual void render() = 0;
 
+        virtual void onWindowResized() = 0;
+
     private:
         struct Internal;
         questart::internal_ptr<Internal> internal;

@@ -40,6 +40,13 @@ bool Application::runMainLoop()
     {
         switch (event.type)
         {
+            case SDL_WINDOWEVENT:
+                if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+                {
+                    onWindowResized();
+                }
+                break;
+
             case SDL_QUIT:
                 return false;
 
