@@ -26,6 +26,8 @@ namespace questart
                                                          const vk::BufferUsageFlags& bufferFlags,
                                                          const void* dataSource);
 
+        void copyData(const questart::VulkanDevice& device, const vk::DeviceSize& size, const void* dataSource);
+
     private:
         struct Internal;
         questart::internal_ptr<Internal> internal;
