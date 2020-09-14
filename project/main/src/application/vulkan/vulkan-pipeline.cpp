@@ -15,8 +15,27 @@ namespace
     // will be made available in the fragment shader pipeline stage only. Note
     // that this pipeline does not include a descriptor set for vertex data as
     // we will use Vulkan push constants for this instead of uniform buffers.
-    vk::UniqueDescriptorSetLayout createDescriptorSetLayout(const questart::VulkanDevice& device)
+
+    vk::UniqueDescriptorSetLayout createUniformBufferDescriptorSetLayout(const questart::VulkanDevice& device)
     {
+        vk::DescriptorSetLayoutBinding uniformBinding{
+            0,
+            vk::DescriptorType::eUniformBuffer,
+            1,
+            vk::ShaderStageFlagBits::eVertex,
+            nullptr};
+
+        vk::DescriptorSetLayoutCreateInfo createInfoUniforms{
+            vk::DescriptorSetLayoutCreateFlags(),
+            1,
+            &uniformBinding};
+
+        return device.getDevice().createDescriptorSetLayoutUnique(createInfoUniforms);
+    }
+
+    vk::UniqueDescriptorSetLayout createSamplerDescriptorSetLayout(const questart::VulkanDevice& device)
+    {
+
         vk::DescriptorSetLayoutBinding textureBinding{
             0,                                         // Binding
             vk::DescriptorType::eCombinedImageSampler, // Descriptor type
@@ -24,16 +43,17 @@ namespace
             vk::ShaderStageFlagBits::eFragment,        // Shader stage flags
             nullptr};                                  // Immutable samplers
 
-        vk::DescriptorSetLayoutCreateInfo info{
+        vk::DescriptorSetLayoutCreateInfo createInfoTexture{
             vk::DescriptorSetLayoutCreateFlags(), // Flags
             1,                                    // Binding count
             &textureBinding};                     // Bindings
 
-        return device.getDevice().createDescriptorSetLayoutUnique(info);
+        return device.getDevice().createDescriptorSetLayoutUnique(createInfoTexture);
     }
 
     vk::UniquePipelineLayout createPipelineLayout(const questart::VulkanDevice& device,
-                                                  const vk::DescriptorSetLayout& descriptorSetLayout)
+                                                  const vk::UniqueDescriptorSetLayout& uniformSetLayout,
+                                                  const vk::UniqueDescriptorSetLayout& samplerSetLayout)
     {
         // We use push constants for delivering the vertex MVP data to the shader. This is
         // a lightweight alternative to using Vulkan uniform buffers with the caveat that
@@ -44,19 +64,25 @@ namespace
         // which is half of our 128 byte quota. If we ever needed to push more than 128
         // bytes of data into our shader we must instead implement Vulkan uniform buffers
         // which require more setup work and are less performant than push constants.
-        vk::PushConstantRange pushConstantRange{
+      /*  vk::PushConstantRange pushConstantRange{
             vk::ShaderStageFlagBits::eAllGraphics, // Flags
             0,                                     // Offset
-            sizeof(glm::mat4)};                    // Size
+            sizeof(glm::mat4)};                    // Size*/
 
-        // We use the descriptor set layout combined with our definition of how we intend
-        // to use push constants during the pipeline to produce an overall pipeline layout.
+            // We use the descriptor set layout combined with our definition of how we intend
+            // to use push constants during the pipeline to produce an overall pipeline layout.
+
+        std::array<vk::DescriptorSetLayout, 2> layouts{
+            uniformSetLayout.get(),
+            samplerSetLayout.get()};
+
+
         vk::PipelineLayoutCreateInfo info{
             vk::PipelineLayoutCreateFlags(), // Flags
-            1,                               // Layout count
-            &descriptorSetLayout,            // Layouts,
-            1,                               // Push constant range count,
-            &pushConstantRange               // Push constant ranges
+            static_cast<uint32_t>(layouts.size()),                               // Layout count
+            layouts.data(),            // Layouts,
+            0,                               // Push constant range count,
+            nullptr               // Push constant ranges
         };
 
         return device.getDevice().createPipelineLayoutUnique(info);
@@ -245,11 +271,15 @@ namespace
     {
         const uint32_t maxDescriptors{64};
 
+        vk::DescriptorPoolSize uniformBuffersPoolSize{
+            vk::DescriptorType::eUniformBuffer,
+            maxDescriptors};
+
         vk::DescriptorPoolSize combinedImageSamplerPoolSize{
             vk::DescriptorType::eCombinedImageSampler, // Type
             maxDescriptors};                           // Max descriptor count
 
-        std::array<vk::DescriptorPoolSize, 1> poolSizes{combinedImageSamplerPoolSize};
+        std::array<vk::DescriptorPoolSize, 2> poolSizes{uniformBuffersPoolSize, combinedImageSamplerPoolSize};
 
         vk::DescriptorPoolCreateInfo info{
             vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, // Flags
@@ -259,6 +289,8 @@ namespace
 
         return device.getDevice().createDescriptorPoolUnique(info);
     }
+
+
 
     vk::UniqueDescriptorSet createTextureSamplerDescriptorSet(const questart::VulkanDevice& device,
                                                               const vk::DescriptorPool& descriptorPool,
@@ -293,17 +325,54 @@ namespace
         return descriptorSet;
     }
 
+    vk::UniqueDescriptorSet createUniformBufferDescriptorSet(const questart::VulkanDevice& device,
+                                                              const vk::DescriptorPool& descriptorPool,
+                                                              const vk::DescriptorSetLayout& descriptorSetLayout,
+                                                              const questart::VulkanBuffer& buffer)
+    {
+        vk::DescriptorSetAllocateInfo createInfo{
+            descriptorPool,        // Descriptor pool
+            1,                     // Descriptor set count
+            &descriptorSetLayout}; // Descriptor set layouts
+
+        vk::UniqueDescriptorSet descriptorSet{
+            std::move(device.getDevice().allocateDescriptorSetsUnique(createInfo)[0])};
+
+        vk::DescriptorBufferInfo bufferInfo{
+            buffer.getBuffer(),
+            0,
+            sizeof(glm::mat4)};
+
+        vk::WriteDescriptorSet writeInfo{
+            descriptorSet.get(),                       // Destination set
+            0,                                         // Destination binding
+            0,                                         // Destination array element
+            1,                                         // Descriptor count
+            vk::DescriptorType::eUniformBuffer,        // Descriptor type
+            nullptr,                                   // Image info
+            &bufferInfo,                               // Buffer info
+            nullptr};                                  // Texel buffer view
+
+        device.getDevice().updateDescriptorSets(1, &writeInfo, 0, nullptr);
+
+        return descriptorSet;
+    }
 
 
 } // namespace
 
 struct VulkanPipeline::Internal
 {
-    const vk::UniqueDescriptorSetLayout descriptorSetLayout;
+    const questart::VulkanPhysicalDevice& physicalDevice;
+    const questart::VulkanDevice& device;
+    const vk::UniqueDescriptorSetLayout uniformBufferDescriptorSetLayout;
+    const vk::UniqueDescriptorSetLayout imageSamplerDescriptorSetLayout;
     const vk::UniquePipelineLayout pipelineLayout;
     const vk::UniquePipeline pipeline;
     const vk::UniqueDescriptorPool descriptorPool;
     std::unordered_map<questart::assets::Texture, vk::UniqueDescriptorSet> textureSamplerDescriptorSets;
+    std::unordered_map<int, questart::VulkanBuffer> staticMeshUniformBuffers;
+    std::unordered_map<int, vk::UniqueDescriptorSet> staticMeshUniformDescriptorSets;
 
     Internal(const questart::VulkanPhysicalDevice& physicalDevice,
              const questart::VulkanDevice& device,
@@ -311,8 +380,11 @@ struct VulkanPipeline::Internal
              const vk::Viewport& viewport,
              const vk::Rect2D& scissor,
              const vk::RenderPass& renderPass)
-        : descriptorSetLayout(::createDescriptorSetLayout(device)),
-          pipelineLayout(::createPipelineLayout(device, descriptorSetLayout.get())),
+        : physicalDevice(physicalDevice),
+          device(device),
+          uniformBufferDescriptorSetLayout(::createUniformBufferDescriptorSetLayout(device)),
+          imageSamplerDescriptorSetLayout(::createSamplerDescriptorSetLayout(device)),
+          pipelineLayout(::createPipelineLayout(device, uniformBufferDescriptorSetLayout, imageSamplerDescriptorSetLayout)),
           pipeline(::createPipeline(physicalDevice,
                                     device,
                                     pipelineLayout.get(),
@@ -331,11 +403,51 @@ struct VulkanPipeline::Internal
                 texture.getTextureId(),
                 ::createTextureSamplerDescriptorSet(device,
                                                     descriptorPool.get(),
-                                                    descriptorSetLayout.get(),
+                                                    imageSamplerDescriptorSetLayout.get(),
                                                     texture)));
         }
 
         return textureSamplerDescriptorSets.at(texture.getTextureId()).get();
+    }
+
+    const vk::DescriptorSet& getUniformBufferDescriptorSet(const questart::VulkanDevice& device, 
+                                                           const int instanceId)
+    {
+        /*
+        if (staticMeshUniformBuffers.count(instanceId) == 0)
+        {
+            staticMeshUniformBuffers.insert(std::make_pair(
+                instanceId,
+                questart::VulkanBuffer(physicalDevice, device, sizeof(glm::mat4), vk::BufferUsageFlagBits::eUniformBuffer,
+                                       vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+                                       nullptr)));
+        }*/
+
+        const questart::VulkanBuffer& buffer = staticMeshUniformBuffers.at(instanceId);
+
+        if (staticMeshUniformDescriptorSets.count(instanceId) == 0)
+        {
+            staticMeshUniformDescriptorSets.insert(std::make_pair(
+                instanceId,
+                ::createUniformBufferDescriptorSet(device, descriptorPool.get(), uniformBufferDescriptorSetLayout.get(), buffer)));
+        }
+
+        return staticMeshUniformDescriptorSets.at(instanceId).get();
+    }
+
+    void updateUniformBuffer(const int instanceId, const vk::DeviceSize& size, const void* data)
+    {
+        if (staticMeshUniformBuffers.count(instanceId) == 0)
+        {
+            staticMeshUniformBuffers.insert(std::make_pair(
+                instanceId,
+                questart::VulkanBuffer(physicalDevice, device, sizeof(glm::mat4), vk::BufferUsageFlagBits::eUniformBuffer,
+                                       vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+                                       nullptr)));
+        }
+
+        questart::VulkanBuffer& buffer = staticMeshUniformBuffers.at(instanceId);
+        buffer.copyData(device, size, data);
     }
 
     void render(const questart::VulkanDevice& device,
@@ -343,16 +455,19 @@ struct VulkanPipeline::Internal
                 const questart::VulkanAssetManager& assetManager,
                 const std::vector<questart::StaticMeshInstance>& staticMeshInstances)
     {
+        int instanceId = 0;
         for (const questart::StaticMeshInstance& meshInstance : staticMeshInstances)
         {
             const questart::VulkanMesh& mesh{assetManager.getStaticMesh(meshInstance.getMesh())};
             const glm::mat4& transform{meshInstance.getTransformMatrix()};
 
-            commandBuffer.pushConstants(pipelineLayout.get(),
+            /*commandBuffer.pushConstants(pipelineLayout.get(),
                                         vk::ShaderStageFlagBits::eAllGraphics,
                                         0,
                                         sizeof(glm::mat4),
-                                        &transform);
+                                        &transform);*/
+
+            updateUniformBuffer(instanceId, sizeof(glm::mat4), &transform);
 
             commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.get());
 
@@ -363,16 +478,27 @@ struct VulkanPipeline::Internal
 
             const questart::VulkanTexture& texture{assetManager.getTexture(meshInstance.getTexture())};
 
+            const vk::DescriptorSet& uniformBufferDescriptorSet{
+                getUniformBufferDescriptorSet(device, instanceId)};
+
             const vk::DescriptorSet& textureSamplerDescriptorSet{
                 getTextureSamplerDescriptorSet(device, texture)};
+
+
+            std::array<vk::DescriptorSet, 2> descriptorSets{
+                uniformBufferDescriptorSet,
+                textureSamplerDescriptorSet};
 
             commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                                              pipelineLayout.get(),
                                              0,
-                                             1, &textureSamplerDescriptorSet,
+                                             static_cast<uint32_t>(descriptorSets.size()), 
+                                             descriptorSets.data(),
                                              0, nullptr);
 
             commandBuffer.drawIndexed(mesh.getNumIndices(), 1, 0, 0, 0);
+
+            instanceId++;
         }
     }
 };

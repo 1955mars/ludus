@@ -12,7 +12,7 @@ struct StaticMeshInstance::Internal
     glm::vec3 scale;
     glm::vec3 rotationAxis;
     float rotationDegrees;
-    glm::mat4 transformMatrix;
+    glm::mat4 transformMatrix; 
 
     Internal(const questart::assets::StaticMesh& mesh,
              const questart::assets::Texture& texture,
@@ -27,7 +27,9 @@ struct StaticMeshInstance::Internal
           scale(scale),
           rotationAxis(rotationAxis),
           rotationDegrees(rotationDegrees),
-          transformMatrix(identity) {}
+          transformMatrix(identity)
+    {
+    }
 
     void update(const glm::mat4& projectionViewMatrix)
     {

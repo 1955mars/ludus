@@ -1,8 +1,8 @@
 #version 460
 
-layout(push_constant) uniform PushConstants {
+layout(set = 0, binding = 0) uniform Buffer {
     mat4 mvp;
-} pushConstants;
+} ubo;
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inTexCoord;
@@ -10,7 +10,7 @@ layout(location = 1) in vec2 inTexCoord;
 layout(location = 0) out vec2 outTexCoord;
 
 void main() {
-    gl_Position = pushConstants.mvp * vec4(inPosition, 1.0f);
+    gl_Position = ubo.mvp * vec4(inPosition, 1.0f);
 
     // The following two lines account for Vulkan having a different
     // coordinate system to OpenGL. See this link for a nice explanation:

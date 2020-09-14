@@ -63,6 +63,16 @@ struct VulkanBuffer::Internal
             device.getDevice().unmapMemory(deviceMemory.get());
         }
     }
+
+    void copyData(const questart::VulkanDevice& device, const vk::DeviceSize& size, const void* dataSource)
+    {
+        if (dataSource)
+        {
+            void* mappedMemory{device.getDevice().mapMemory(deviceMemory.get(), 0, size)};
+            std::memcpy(mappedMemory, dataSource, static_cast<size_t>(size));
+            device.getDevice().unmapMemory(deviceMemory.get());
+        }
+    }
 };
 
 VulkanBuffer::VulkanBuffer(const questart::VulkanPhysicalDevice& physicalDevice,
@@ -113,4 +123,9 @@ questart::VulkanBuffer VulkanBuffer::createDeviceLocalBuffer(const questart::Vul
     commandPool.endCommandBuffer(commandBuffer.get(), device);
 
     return deviceLocalBuffer;
+}
+
+void VulkanBuffer::copyData(const questart::VulkanDevice& device, const vk::DeviceSize& size, const void* dataSource)
+{
+    internal->copyData(device, size, dataSource);
 }

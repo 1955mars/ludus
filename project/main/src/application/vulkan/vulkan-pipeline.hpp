@@ -5,6 +5,7 @@
 #include "../../core/static-mesh-instance.hpp"
 #include "vulkan-device.hpp"
 #include "vulkan-physical-device.hpp"
+#include "vulkan-buffer.hpp"
 #include <string>
 #include <vector>
 
