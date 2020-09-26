@@ -1,7 +1,7 @@
 #include "scene-main.hpp"
 #include "../core/perspective-camera.hpp"
 #include "../core/static-mesh-instance.hpp"
-#include "../core/sdl-wrapper.hpp"
+#include "../sdl/sdl-wrapper.hpp"
 #include "player.hpp"
 
 using questart::SceneMain;

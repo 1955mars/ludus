@@ -4,6 +4,8 @@ project(questart)
 
 set(THIRD_PARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../third-party")
 set(MAIN_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../main/src")
+set(MAIN_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../main/include")
+set(PLATFORM_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/windows")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/out)
 
 set(LIB_SDL2 ${THIRD_PARTY_DIR}/sdl-windows/lib/x64/SDL2.lib)
@@ -18,9 +20,13 @@ include_directories(${THIRD_PARTY_DIR}/glm)
 include_directories(${THIRD_PARTY_DIR}/tiny-obj-loader)
 include_directories(${THIRD_PARTY_DIR}/sdl-image-windows/include)
 include_directories(${THIRD_PARTY_DIR}/vulkan-windows/Include)
+include_directories(${MAIN_INCLUDE_DIR})
 
-file(GLOB_RECURSE CPP_HEADERS ${MAIN_SOURCE_DIR}/*.hpp)
-file(GLOB_RECURSE CPP_SOURCES ${MAIN_SOURCE_DIR}/*.cpp)
+file(GLOB_RECURSE MAIN_INCLUDE_HEADERS ${MAIN_INCLUDE_DIR}/*.hpp)
+file(GLOB_RECURSE MAIN_CPP_HEADERS ${MAIN_SOURCE_DIR}/*.hpp)
+file(GLOB_RECURSE MAIN_CPP_SOURCES ${MAIN_SOURCE_DIR}/*.cpp)
+file(GLOB_RECURSE PLATFORM_CPP_HEADERS ${PLATFORM_SOURCE_DIR}/*.hpp)
+file(GLOB_RECURSE PLATFORM_CPP_SOURCES ${PLATFORM_SOURCE_DIR}/*.cpp)
 
 # If we are generating a release build, then request that we produce a Windows desktop
 # application executable by specifying WIN32 as an executable option. This avoids the
@@ -34,8 +40,11 @@ endif()
 
 add_executable(
 	questart ${EXECUTABLE_TYPE}
-	${CPP_HEADERS}
-	${CPP_SOURCES}
+	${MAIN_INCLUDE_HEADERS}
+	${MAIN_CPP_HEADERS}
+	${MAIN_CPP_SOURCES}
+	${PLATFORM_CPP_HEADERS}
+	${PLATFORM_CPP_SOURCES}
 )
 
 set_property(TARGET questart PROPERTY CXX_STANDARD 17)

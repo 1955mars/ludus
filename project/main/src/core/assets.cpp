@@ -1,7 +1,7 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 
 #include "assets.hpp"
-#include "sdl-wrapper.hpp"
+#include "../sdl/sdl-wrapper.hpp"
 #include "vertex.hpp"
 #include <SDL_image.h>
 #include <string>
