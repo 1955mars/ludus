@@ -1,7 +1,7 @@
 #pragma once
 
 #include "internal_ptr.hpp"
-#include "sdl-wrapper.hpp"
+#include "../sdl/sdl-wrapper.hpp"
 
 namespace questart
 {
