@@ -78,6 +78,6 @@ if (!(Test-Path "..\..\third-party\sdl-image-windows")) {
 }
 
 # Compile Vulkan shaders into SPIR-V binary assets.
-Push-Location -Path "../main/vulkan_shader_source"
+Push-Location -Path "../src/vulkan_shader_source"
     .\compile_shaders.ps1
 Pop-Location
