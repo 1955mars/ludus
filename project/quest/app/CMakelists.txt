@@ -1,18 +1,14 @@
 cmake_minimum_required(VERSION 3.4.1)
 
-#Instruct our compiler that we want to use c++ 17 and use exceptions.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fexceptions")
 
-#Determine what build type we are in, shifted to lower case (debug or release).
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fexceptions")
 string(TOLOWER ${CMAKE_BUILD_TYPE} BUILD_VARIANT_DIR)
 
-#Location of our third party libraries.
-set(THIRD_PARTY_DIR "${CMAKE_SOURCE_DIR}/../../../third-party")
 
-#Location of our own shared C++ code base.
-set(MAIN_SOURCE_DIR "../../main/src")
-
-#Location of ovr mobile sdk
+set(THIRD_PARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../third-party")
+set(MAIN_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../src/common")
+set(MAIN_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../src/include")
+set(PLATFORM_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../src/platform/quest")
 set(OVR_HOME "${THIRD_PARTY_DIR}/ovr-mobile")
 
 add_definitions( -DQUEST=1 )
@@ -25,29 +21,40 @@ find_library(log-lib log)
 
 #We will tell our build system where to look for third party header files.
 include_directories(
-        ${CMAKE_SOURCE_DIR}/src/main/cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/main/cpp
         ${THIRD_PARTY_DIR}/glm
+        ${THIRD_PARTY_DIR}/ktx/include
+        ${THIRD_PARTY_DIR}/ktx/other_include
         ${THIRD_PARTY_DIR}/tiny-obj-loader
         ${OVR_HOME}/VrApi/Include
-        ${OVR_HOME}/VrSamples/SampleFramework/Src
         ${OVR_HOME}/1stParty/OVR/Include
-        ${OVR_HOME}/1stParty/utilities/include
-        ${OVR_HOME}/3rdParty/minizip/src
-        ${OVR_HOME}/3rdParty/stb/src
+		${OVR_HOME}/1stParty/utilities/include
+		${OVR_HOME}/3rdParty/minizip/src
+		${OVR_HOME}/3rdParty/stb/src
         ${ANDROID_NDK}/sources/third_party/vulkan/src/common
         ${ANDROID_NDK}/sources/third_party/vulkan/src/include
         ${ANDROID_NDK}/sources/android/native_app_glue
-		${CMAKE_SOURCE_DIR}/src/main/cpp)
+		${MAIN_SOURCE_DIR}/core
+		${MAIN_SOURCE_DIR}/graphics/vulkan/common
+		${MAIN_INCLUDE_DIR}
+		${PLATFORM_SOURCE_DIR}/include
+		${PLATFORM_SOURCE_DIR}/scene
+		${PLATFORM_SOURCE_DIR})
 
 # We will recursively collate all .hpp header and .cpp source files under the main source directory as the input for the compilation.
-file(GLOB_RECURSE CPP_HEADERS ${MAIN_SOURCE_DIR}/*.hpp)
-file(GLOB_RECURSE CPP_SOURCES ${MAIN_SOURCE_DIR}/*.cpp)
-
-file(GLOB_RECURSE VULKAN_APP_HEADERS ${MAIN_SOURCE_DIR}/application/vulkan/*.hpp)
-file(GLOB_RECURSE VULKAN_APP_SOURCES ${MAIN_SOURCE_DIR}/application/vulkan/*.cpp)
 file(GLOB_RECURSE CORE_HEADERS ${MAIN_SOURCE_DIR}/core/*.hpp)
 file(GLOB_RECURSE CORE_SOURCES ${MAIN_SOURCE_DIR}/core/*.cpp)
 
+file(GLOB_RECURSE MAIN_INCLUDE_HEADERS ${MAIN_INCLUDE_DIR}/*.hpp)
+
+file(GLOB_RECURSE VULKAN_COMMON_HEADERS ${MAIN_SOURCE_DIR}/graphics/vulkan/common/*.hpp)
+file(GLOB_RECURSE VULKAN_COMMON_SOURCES ${MAIN_SOURCE_DIR}/graphics/vulkan/common/*.cpp)
+
+file(GLOB_RECURSE VULKAN_OCULUS_HEADERS ${MAIN_SOURCE_DIR}/graphics/vulkan/oculus/*.hpp)
+file(GLOB_RECURSE VULKAN_OCULUS_SOURCES ${MAIN_SOURCE_DIR}/graphics/vulkan/oculus/*.cpp)
+
+file(GLOB_RECURSE PLATFORM_HEADERS ${PLATFORM_SOURCE_DIR}/*.hpp)
+file(GLOB_RECURSE PLATFORM_SOURCES ${PLATFORM_SOURCE_DIR}/*.cpp)
 
 
 add_library(vrapi SHARED IMPORTED)
@@ -73,11 +80,17 @@ add_library(app-glue
 
 # The 'questart' library target is actually our own C++ code from the shared 'main' source code folder.
 add_library(
-	questart
-	SHARED
-	${CPP_HEADERS}
-	${CPP_SOURCES}
-	${ANDROID_NDK}/sources/third_party/vulkan/src/common/vulkan_wrapper.cpp
+		questart
+		SHARED
+		${CORE_HEADERS}
+		${CORE_SOURCES}
+		${VULKAN_COMMON_HEADERS}
+		${VULKAN_COMMON_SOURCES}
+		${VULKAN_OCULUS_HEADERS}
+		${VULKAN_OCULUS_SOURCES}
+		${PLATFORM_HEADERS}
+		${PLATFORM_SOURCES}
+		${ANDROID_NDK}/sources/third_party/vulkan/src/common/vulkan_wrapper.cpp
 )
 
 # Finally, we need to link all the libraries we want to use in our project together, remembering that the 'questart' library is in fact our own C++ code. Note also we are including the 'GLESv3' library for OpenGL ES3 support, though we don't need to define it ourselves with the 'add_library' commands.

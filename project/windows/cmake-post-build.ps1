@@ -7,7 +7,7 @@ if (!(Test-Path "SDL2.dll")) {
 	
 # If there is no 'assets' folder in our output we need to create a new symlink for it
 if (!(Test-Path "assets")) {
-    cmd.exe /c 'mklink /d assets ..\..\main\assets'
+    cmd.exe /c 'mklink /d assets ..\..\src\assets'
 }
 
 if (!(Test-Path "SDL2_image.dll")) {
