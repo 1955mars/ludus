@@ -9,9 +9,9 @@ namespace questart
     {
         VulkanApplication();
 
-        void update(const float& delta) override;
+        void update(const float& delta, void* tracking) override;
 
-        void render() override;
+        void render(const double& displayTime = 0.0, void* tracking = nullptr, long long frameIndex = 0) override;
 
         inline void onWindowResized() override {}
 

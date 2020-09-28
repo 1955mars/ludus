@@ -140,9 +140,9 @@ struct VulkanContext::Internal
                                                   staticMeshInstances);
     }
 
-    void renderEnd()
+    void renderEnd(const double& displayTime, void* tracking, long long frameIndex)
     {
-        if (!renderContext.renderEnd(device))
+        if (!renderContext.renderEnd(device, displayTime, tracking, frameIndex))
         {
             //recreateRenderContext();
         }
@@ -175,9 +175,9 @@ void VulkanContext::render(const questart::assets::Pipeline& pipeline,
     internal->render(pipeline, staticMeshInstances);
 }
 
-void VulkanContext::renderEnd()
+void VulkanContext::renderEnd(const double& displayTime, void* tracking, long long frameIndex)
 {
-    internal->renderEnd();
+    internal->renderEnd(displayTime, tracking, frameIndex);
 }
 
 const questart::WindowSize& VulkanContext::getCurrentWindowSize()

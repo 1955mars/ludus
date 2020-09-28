@@ -91,6 +91,13 @@ add_library(
 		${PLATFORM_HEADERS}
 		${PLATFORM_SOURCES}
 		${ANDROID_NDK}/sources/third_party/vulkan/src/common/vulkan_wrapper.cpp
+
+		${THIRD_PARTY_DIR}/ktx/lib/texture.c
+		${THIRD_PARTY_DIR}/ktx/lib/hashlist.c
+		${THIRD_PARTY_DIR}/ktx/lib/checkheader.c
+		${THIRD_PARTY_DIR}/ktx/lib/swap.c
+		${THIRD_PARTY_DIR}/ktx/lib/memstream.c
+		${THIRD_PARTY_DIR}/ktx/lib/filestream.c
 )
 
 # Finally, we need to link all the libraries we want to use in our project together, remembering that the 'questart' library is in fact our own C++ code. Note also we are including the 'GLESv3' library for OpenGL ES3 support, though we don't need to define it ourselves with the 'add_library' commands.

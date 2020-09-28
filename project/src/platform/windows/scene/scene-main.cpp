@@ -81,10 +81,13 @@ struct SceneMain::Internal
 
         //const glm::mat4 cameraMatrix{camera.getProjectionMatrix() * camera.getViewMatrix()};
 
+        std::vector<glm::mat4> viewMatrix{ camera.getViewMatrix() };
+        std::vector<glm::mat4> projectionMatrix{ camera.getProjectionMatrix() };
+
         for (auto& staticMesh : staticMeshes)
         {
             staticMesh.rotateBy(delta * 45.0f);
-            staticMesh.update(camera.getViewMatrix(), camera.getProjectionMatrix());
+            staticMesh.update(viewMatrix, projectionMatrix);
         }
     }
 
@@ -146,7 +149,7 @@ void SceneMain::prepare()
     internal->prepare();
 }
 
-void SceneMain::update(const float& delta)
+void SceneMain::update(const float& delta, void* tracking)
 {
     internal->update(delta);
 }

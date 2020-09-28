@@ -173,13 +173,18 @@ namespace
             1,                                      // Scissor count
             &scissor};                              // Scissors
 
+#if defined(QUEST)
+        vk::CullModeFlagBits cullMode = vk::CullModeFlagBits::eFront;
+#else
+        vk::CullModeFlagBits cullMode = vk::CullModeFlagBits::eBack;
+#endif
         // Define how the pipeline should process output during rendering.
         vk::PipelineRasterizationStateCreateInfo rasterizationState{
             vk::PipelineRasterizationStateCreateFlags(), // Flags
             VK_FALSE,                                    // Depth clamp enable
             VK_FALSE,                                    // Rasterizer discard enable
             vk::PolygonMode::eFill,                      // Polygon mode
-            vk::CullModeFlagBits::eBack,                 // Cull mode
+            cullMode,                 // Cull mode
             vk::FrontFace::eCounterClockwise,            // Front face
             VK_FALSE,                                    // Depth bias enable
             0.0f,                                        // Depth bias constant factor

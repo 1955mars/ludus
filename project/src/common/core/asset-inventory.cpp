@@ -5,7 +5,11 @@ std::string questart::assets::resolvePipelinePath(const questart::assets::Pipeli
     switch (pipeline)
     {
         case questart::assets::Pipeline::Default:
+#if defined(QUEST)
+            return "default_multiView";
+#else
             return "default";
+#endif
     }
 }
 

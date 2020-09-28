@@ -26,7 +26,7 @@ namespace questart
                                     */
 
         bool renderBegin(const questart::VulkanDevice& device);
-        bool renderEnd(const questart::VulkanDevice& device, const double& displayTime = 0.0, void* tracking = nullptr, long long frameIndex = 0);
+        bool renderEnd(const questart::VulkanDevice& device, const double& displayTime, void* tracking, long long frameIndex);
 
         
         const vk::Viewport& getViewport() const;

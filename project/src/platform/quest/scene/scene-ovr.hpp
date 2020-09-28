@@ -1,20 +1,21 @@
 #pragma once
 
-#include "../core/internal_ptr.hpp"
-#include "../core/window-size.hpp"
+#include "internal_ptr.hpp"
+#include "glm-wrapper.hpp"
+#include "ovr-wrapper.hpp"
 #include "scene.hpp"
 
 namespace questart
 {
-    struct SceneMain : public questart::Scene
+    struct SceneOVR : public questart::Scene
     {
-        SceneMain(const questart::WindowSize& frameSize);
+        SceneOVR();
 
         questart::AssetManifest getAssetManifest() override;
 
         void prepare() override;
 
-        void update(const float& delta) override;
+        void update(const float& delta, void* tracking) override ;
 
         void render(questart::Renderer& renderer) override;
 
@@ -24,4 +25,4 @@ namespace questart
         struct Internal;
         questart::internal_ptr<Internal> internal;
     };
-} // namespace questart
+}

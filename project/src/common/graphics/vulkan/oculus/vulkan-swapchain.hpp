@@ -27,6 +27,7 @@ namespace questart
         const vk::Extent2D& getExtent() const;
         uint32_t getImageCount() const;
 
+        const questart::WindowSize& getCurrentWindowSize() const;
 
     private:
         struct Internal;

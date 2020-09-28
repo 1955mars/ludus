@@ -66,7 +66,9 @@ bool questart::vulkan::isVulkanAvailable()
     }
 #endif
 
-    
+#if defined(QUEST)
+    return true;
+#else
     // Check if SDL itself can load Vulkan.
     if (SDL_Vulkan_LoadLibrary(nullptr) != 0)
     {
@@ -108,4 +110,5 @@ bool questart::vulkan::isVulkanAvailable()
 
     questart::log(logTag, "Vulkan is available.");
     return true;
+#endif
 }

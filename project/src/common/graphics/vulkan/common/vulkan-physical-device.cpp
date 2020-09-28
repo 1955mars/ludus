@@ -155,6 +155,9 @@ namespace
 
     vk::Format getDepthFormat(const vk::PhysicalDevice& physicalDevice)
     {
+#if defined(QUEST)
+        return vk::Format::eD24UnormS8Uint;
+#endif
         static const std::string logTag{"questart::VulkanPhysicalDevice::getDepthFormat"};
 
         vk::FormatProperties formatProperties{physicalDevice.getFormatProperties(vk::Format::eD32Sfloat)};
