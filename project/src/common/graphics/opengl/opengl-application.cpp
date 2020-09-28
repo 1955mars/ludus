@@ -118,12 +118,12 @@ struct OpenGLApplication::Internal
 
 OpenGLApplication::OpenGLApplication() : internal(questart::make_internal_ptr<Internal>()) {}
 
-void OpenGLApplication::update(const float& delta)
+void OpenGLApplication::update(const float& delta, void* tracking)
 {
     internal->update(delta);
 }
 
-void OpenGLApplication::render()
+void OpenGLApplication::render(const double& displayTime, void* tracking, long long frameIndex)
 {
     internal->render();
 }

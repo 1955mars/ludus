@@ -14,9 +14,11 @@ namespace questart
 
         static void app_handle_cmd(struct android_app* app, int32_t cmd);
 
+        static android_app* appHandle;
         static ovrJava appJava;
         static ovrMobile* ovrApp;
         static long long frameIndex;
+        static VkQueue graphicsQueue;
 
     private:
         struct Internal;

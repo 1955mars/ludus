@@ -18,7 +18,7 @@ namespace questart
             const questart::assets::Pipeline& pipeline,
             const std::vector<questart::StaticMeshInstance>& staticMeshInstances) = 0;
 
-        virtual void renderEnd() = 0;
+        virtual void renderEnd(const double& displayTime, void* tracking, long long frameIndex) = 0;
 
         virtual const questart::WindowSize& getCurrentWindowSize() = 0;
     };

@@ -6,6 +6,7 @@
 
 #if defined(QUEST)
 #include "ovr-wrapper.hpp"
+#include "engine.hpp"
 #endif
 
 using questart::VulkanDevice;
@@ -313,7 +314,12 @@ struct VulkanDevice::Internal
         : queueConfig(::getQueueConfig(physicalDevice.getPhysicalDevice())),
           device(::createDevice(physicalDevice, queueConfig)),
           graphicsQueue(::getQueue(device.get(), queueConfig.graphicsQueueIndex)),
-          presentationQueue(::getQueue(device.get(), queueConfig.presentationQueueIndex)) {}
+          presentationQueue(::getQueue(device.get(), queueConfig.presentationQueueIndex))
+    {
+#if defined(QUEST)
+        questart::Engine::graphicsQueue = graphicsQueue;
+#endif
+    }
 
     ~Internal()
     {

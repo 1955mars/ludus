@@ -16,7 +16,7 @@ namespace questart
 
         virtual void prepare() = 0;
 
-        virtual void update(const float& delta) = 0;
+        virtual void update(const float& delta, void* tracking = nullptr) = 0;
 
         virtual void render(questart::Renderer& renderer) = 0;
 

@@ -13,7 +13,7 @@ namespace questart
 
         void prepare() override;
 
-        void update(const float& delta) override;
+        void update(const float& delta, void* tracking) override;
 
         void render(questart::Renderer& renderer) override;
 

@@ -1,5 +1,5 @@
 #include "vulkan-render-pass.hpp"
-
+#include "log.hpp"
 
 using questart::VulkanRenderPass;
 
@@ -12,6 +12,16 @@ namespace
         vk::Format colorFormat{swapchain.getColorFormat()};
         vk::SampleCountFlagBits multiSamplingLevel{physicalDevice.getMultiSamplingLevel()};
         vk::Format depthFormat{physicalDevice.getDepthFormat()};
+
+        if(colorFormat ==  vk::Format::eR8G8B8A8Unorm)
+            questart::log("RenderPass: Same color format", "");
+        else
+            questart::log("RenderPass: diff color format", "");
+
+        if(depthFormat ==  vk::Format::eD24UnormS8Uint)
+            questart::log("RenderPass: Same depth format", "");
+        else
+            questart::log("RenderPass: diff depth format", "");
 
         vk::AttachmentDescription colorAttachment{
             vk::AttachmentDescriptionFlags(),          // Flags
@@ -97,6 +107,19 @@ namespace
             &subpass,                                  // Subpasses
             1,                                         // Dependency count
             &subpassDependency};                       // Dependencies
+
+#if defined(QUEST)
+        uint32_t viewMask = 0b00000011;
+        vk::RenderPassMultiviewCreateInfo multiviewCreateInfo{
+                1,
+                &viewMask,
+                0,
+                nullptr,
+                1,
+                &viewMask
+        };
+        renderPassCreateInfo.pNext = &multiviewCreateInfo;
+#endif
 
         return device.getDevice().createRenderPassUnique(renderPassCreateInfo);
 

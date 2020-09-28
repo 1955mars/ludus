@@ -14,12 +14,16 @@ namespace
                          const questart::VulkanCommandPool& commandPool,
                          const questart::VulkanImage& image)
     {
+        uint32_t layerCount = 1;
+#if defined(QUEST)
+        layerCount = 2;
+#endif
         vk::ImageSubresourceRange barrierSubresourceRange{
             vk::ImageAspectFlagBits::eColor, // Aspect mask
             0,                               // Base mip level
             1,                               // Level count
             0,                               // Base array layer
-            1};                              // Layer count
+            layerCount};                              // Layer count
 
         vk::ImageMemoryBarrier barrier{
             vk::AccessFlags(),           // Source access mask
@@ -160,6 +164,10 @@ namespace
             vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
             ktxTextureData};
 
+        uint32_t layerCount = 1;
+#if defined(QUEST)
+        layerCount = 2;
+#endif
         questart::VulkanImage image{
             commandPool,
             physicalDevice,
@@ -168,7 +176,7 @@ namespace
             static_cast<uint32_t>(imageHeight),
             0,
             mipLevels,
-            1,  // Layer Count: 2 (MultiView)
+            layerCount,  // Layer Count: 2 (MultiView)
             1,
             vk::SampleCountFlagBits::e1,
             vk::Format::eR8G8B8A8Unorm,
@@ -184,7 +192,7 @@ namespace
             vk::ImageAspectFlagBits::eColor, // Aspect mask
             0,                               // Mip level
             0,                               // Base array layer
-            1};                              // Layer count
+            layerCount};                              // Layer count
 
         vk::Extent3D imageExtent{
             static_cast<uint32_t>(imageWidth), // Width

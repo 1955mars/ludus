@@ -43,20 +43,23 @@ namespace
         }
         questart::log("InitOvrApp: ", "Successfully initialized Vulkan & VrApi");
 
-        questart::Engine::appJava = java;
         return java;
     }
 
 }
 
+android_app* questart::Engine::appHandle;
+ovrJava questart::Engine::appJava;
+ovrMobile* questart::Engine::ovrApp;
+long long questart::Engine::frameIndex;
+VkQueue questart::Engine::graphicsQueue;
+
+
 struct Engine::Internal
 {
-    struct android_app* app;
-    ovrJava java;
-    ovrMobile* ovrApp = nullptr;
     ANativeWindow* nativeWindow = nullptr;
     long long frameIndex = 1;
-    double preDisplayTime = 0;
+    double previousTime = 0;
     double displayTime = 0;
     bool isResumed = false;
     int cpuLevel = 2;
@@ -66,30 +69,27 @@ struct Engine::Internal
     bool backButtonDownLastFrame = false;
 
     std::unique_ptr<questart::Application> application;
-    std::unique_ptr<questart::Scene> scene = nullptr;
 
     Internal(struct android_app* app)
-            :app(app),
-             java(initOvrApp(app))
     {
-
-    }
-
-    const double timeStep()
-    {
-
+        questart::Engine::appHandle = app;
+        questart::Engine::appJava = initOvrApp(app);
+        application = std::make_unique<questart::VulkanApplication>();
+        mainThreadID = std::this_thread::get_id();
     }
 
     void run()
     {
-        app->onAppCmd = app_handle_cmd;
-        app->userData = this;
+        appHandle->onAppCmd = app_handle_cmd;
+        appHandle->userData = this;
+
+        runMainLoop();
     }
 
     bool runMainLoop()
     {
         //questart::log("runMainLoop: ", "Entering!");
-        while(app->destroyRequested == 0)
+        while(appHandle->destroyRequested == 0)
         {
             //questart::log("runMainLoop: ", "Inside Loop!");
             //Read all pending eventsquestart::log("runMainLoop: ", "Inside Loop!");
@@ -98,7 +98,7 @@ struct Engine::Internal
                 int events;
                 struct android_poll_source* source;
                 const int timeoutMilliseconds =
-                        (ovrApp == nullptr && app->destroyRequested == 0) ? -1 : 0;
+                        (questart::Engine::ovrApp == nullptr && questart::Engine::appHandle->destroyRequested == 0) ? -1 : 0;
                 if (ALooper_pollAll(timeoutMilliseconds, nullptr, &events, (void**)&source) < 0)
                 {
                     //questart::log("runMainLoop: ", "No pending events!");
@@ -106,7 +106,7 @@ struct Engine::Internal
                 }
                 // Process this event.
                 if (source != nullptr) {
-                    source->process(app, source);
+                    source->process(questart::Engine::appHandle, source);
                 }
 
                 handleVRModeChanges();
@@ -116,67 +116,35 @@ struct Engine::Internal
 
             handleInput();
 
-            if(ovrApp == nullptr)
+            if(questart::Engine::ovrApp == nullptr)
             {
                 //questart::log("runMainLoop: ", "ovrApp has still not entered VR Mode!");
                 continue;
             }
 
-            if(scene == nullptr)
-            {
-                // Show a loading icon
-                int frameFlags = 0;
-                frameFlags |= VRAPI_FRAME_FLAG_FLUSH;
-
-                ovrLayerProjection2 blackLayer = vrapi_DefaultLayerBlackProjection2();
-                blackLayer.Header.Flags |= VRAPI_FRAME_LAYER_FLAG_INHIBIT_SRGB_FRAMEBUFFER;
-
-                ovrLayerLoadingIcon2 iconLayer = vrapi_DefaultLayerLoadingIcon2();
-                iconLayer.Header.Flags |= VRAPI_FRAME_LAYER_FLAG_INHIBIT_SRGB_FRAMEBUFFER;
-
-                const ovrLayerHeader2* layers[] = {
-                        &blackLayer.Header,
-                        &iconLayer.Header,
-                };
-
-                ovrSubmitFrameDescription2 frameDesc{0};
-                frameDesc.Flags = frameFlags;
-                frameDesc.SwapInterval = 1;
-                frameDesc.FrameIndex = frameIndex;
-                frameDesc.DisplayTime = displayTime;
-                frameDesc.LayerCount = 2;
-                frameDesc.Layers = layers;
-
-                vrapi_SubmitFrame2(ovrApp, &frameDesc);
-
-                scene = ::createOVRScene(vulkanContext);
-
-                if(scene!= nullptr)
-                    questart::log("runMainLoop:", "Created OVRScene successfully!");
-
-                preDisplayTime = displayTime;
-            }
 
             //Simulation
             //questart::log("Simulation:", "Entering!");
             frameIndex++;
 
-            const double predictedDisplayTime = vrapi_GetPredictedDisplayTime(ovrApp, frameIndex);
-            const ovrTracking2 tracking = vrapi_GetPredictedTracking2(ovrApp, predictedDisplayTime);
+            const double predictedDisplayTime = vrapi_GetPredictedDisplayTime(questart::Engine::ovrApp, frameIndex);
+            ovrTracking2 tracking = vrapi_GetPredictedTracking2(questart::Engine::ovrApp, predictedDisplayTime);
+
 
             displayTime = predictedDisplayTime;
 
             //questart::log("Simulation: displayTime: ", std::to_string(displayTime));
 
-            scene->update(displayTime-preDisplayTime, tracking);
+            application->update(predictedDisplayTime - previousTime, (void*)&tracking);
+            application->render(displayTime, (void*)&tracking, frameIndex);
 
-            render();
-
+            if(displayTime > previousTime)
+                previousTime = displayTime;
         }
 
         vrapi_DestroySystemVulkan();
         vrapi_Shutdown();
-        java.Vm->DetachCurrentThread();
+        questart::Engine::appJava.Vm->DetachCurrentThread();
 
         return true;
     }
@@ -187,11 +155,11 @@ struct Engine::Internal
         if(isResumed && nativeWindow != nullptr)
         {
             questart::log("handleVRModeChanges: ", "is Resumed and got Native Window!");
-            if(ovrApp == nullptr)
+            if(questart::Engine::ovrApp == nullptr)
             {
                 questart::log("handleVRModeChanges: ", "ovrApp is null!");
-                ovrModeParmsVulkan parmsVulkan = vrapi_DefaultModeParmsVulkan(&java,
-                                                                              (unsigned  long long) *reinterpret_cast<const VkQueue*>(&vulkanSystem.getDevice().getWorkQueue()));
+                ovrModeParmsVulkan parmsVulkan = vrapi_DefaultModeParmsVulkan(&questart::Engine::appJava,
+                                                                              (unsigned  long long) *reinterpret_cast<const VkQueue*>(&questart::Engine::graphicsQueue));
 
                 // No need to reset the FLAG_FULLSCREEN window flag when using a View
                 parmsVulkan.ModeParms.Flags &= ~VRAPI_MODE_FLAG_RESET_WINDOW_FULLSCREEN;
@@ -203,9 +171,9 @@ struct Engine::Internal
                 parmsVulkan.ModeParms.Display = 0;
                 parmsVulkan.ModeParms.ShareContext = 0;
 
-                ovrApp = vrapi_EnterVrMode((ovrModeParms*)&parmsVulkan);
+                questart::Engine::ovrApp = vrapi_EnterVrMode((ovrModeParms*)&parmsVulkan);
 
-                if(ovrApp == nullptr)
+                if(questart::Engine::ovrApp == nullptr)
                 {
                     questart::log("handleVRModeChanges:", "Invalid Native Window!");
                     nativeWindow = nullptr;
@@ -213,8 +181,8 @@ struct Engine::Internal
 
                 if(ovrApp != nullptr)
                 {
-                    vrapi_SetClockLevels(ovrApp, cpuLevel, gpuLevel);
-                    vrapi_SetPerfThread(ovrApp, VRAPI_PERF_THREAD_TYPE_MAIN, *reinterpret_cast<const uint32_t*>(&mainThreadID));
+                    vrapi_SetClockLevels(questart::Engine::ovrApp, cpuLevel, gpuLevel);
+                    vrapi_SetPerfThread(questart::Engine::ovrApp, VRAPI_PERF_THREAD_TYPE_MAIN, *reinterpret_cast<const uint32_t*>(&mainThreadID));
                     //vrapi_SetPerfThread(ovrApp, VRAPI_PERF_THREAD_TYPE_RENDERER, *reinterpret_cast<const uint32_t*>(&renderThreadID));
                 }
             } else{
@@ -223,10 +191,10 @@ struct Engine::Internal
         } else
         {
 
-            if(ovrApp != nullptr)
+            if(questart::Engine::ovrApp != nullptr)
             {
                 vrapi_LeaveVrMode(ovrApp);
-                ovrApp = nullptr;
+                questart::Engine::ovrApp = nullptr;
             }
         }
     }
@@ -239,7 +207,7 @@ struct Engine::Internal
         for(int i=0; ; i++)
         {
             ovrInputCapabilityHeader cap;
-            ovrResult  result = vrapi_EnumerateInputDevices(ovrApp, i, &cap);
+            ovrResult  result = vrapi_EnumerateInputDevices(questart::Engine::ovrApp, i, &cap);
 
             if(result < 0)
                 break;
@@ -248,7 +216,7 @@ struct Engine::Internal
             {
                 ovrInputStateTrackedRemote trackedRemoteState;
                 trackedRemoteState.Header.ControllerType = ovrControllerType_TrackedRemote;
-                result = vrapi_GetCurrentInputState(ovrApp, cap.DeviceID, &trackedRemoteState.Header);
+                result = vrapi_GetCurrentInputState(questart::Engine::ovrApp, cap.DeviceID, &trackedRemoteState.Header);
                 if(result == ovrSuccess)
                 {
                     backButtonDownThisFrame |= trackedRemoteState.Buttons & ovrButton_Back;
@@ -265,7 +233,7 @@ struct Engine::Internal
         {
             questart::log("handleInput: ", "back button short press");
             questart::log("handleInput: ", "vrapi_ShowSystemUI( confirmQuit )");
-            vrapi_ShowSystemUI(&java, VRAPI_SYS_UI_CONFIRM_QUIT_MENU);
+            vrapi_ShowSystemUI(&questart::Engine::appJava, VRAPI_SYS_UI_CONFIRM_QUIT_MENU);
         }
     }
 
@@ -317,7 +285,7 @@ struct Engine::Internal
 
 void Engine::app_handle_cmd(struct android_app* app, int32_t cmd) {
 
-    Engine::Internal& ovrApp = *reinterpret_cast<Engine::Internal*>(app->userData);
+    Engine::Internal& engine = *reinterpret_cast<Engine::Internal*>(app->userData);
 
     switch (cmd) {
         // There is no APP_CMD_CREATE. The ANativeActivity creates the
@@ -329,12 +297,12 @@ void Engine::app_handle_cmd(struct android_app* app, int32_t cmd) {
         }
         case APP_CMD_RESUME: {
             questart::log("app_handle_cmd: ", "App Command Resume!");
-            ovrApp.isResumed = true;
+            engine.isResumed = true;
             break;
         }
         case APP_CMD_PAUSE: {
             questart::log("app_handle_cmd: ", "App Command Pause!");
-            ovrApp.isResumed = false;
+            engine.isResumed = false;
             break;
         }
         case APP_CMD_STOP: {
@@ -343,7 +311,7 @@ void Engine::app_handle_cmd(struct android_app* app, int32_t cmd) {
         }
         case APP_CMD_DESTROY: {
             questart::log("app_handle_cmd: ", "App Command Destroy!");
-            ovrApp.nativeWindow = nullptr;
+            engine.nativeWindow = nullptr;
             break;
         }
         case APP_CMD_INIT_WINDOW: {
@@ -353,17 +321,29 @@ void Engine::app_handle_cmd(struct android_app* app, int32_t cmd) {
             {
                 questart::log("app_handle_cmd: ", "app window is null!");
             }
-            ovrApp.nativeWindow = app->window;
+            engine.nativeWindow = app->window;
             break;
         }
         case APP_CMD_TERM_WINDOW: {
             questart::log("app_handle_cmd: ", "App Command Surface Destroyed!");
             questart::log("app_handle_cmd: ", "App Command Term Window!");
-            ovrApp.nativeWindow = nullptr;
+            engine.nativeWindow = nullptr;
             break;
         }
 
         default:
             break;
     }
+}
+
+
+Engine::Engine(struct android_app* app)
+        :internal(make_internal_ptr<Internal>(app))
+{
+
+}
+
+void Engine::run()
+{
+    internal->run();
 }

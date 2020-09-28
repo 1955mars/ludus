@@ -101,7 +101,7 @@ Pop-Location
 Push-Location "app\src\main\assets"
 if (!(Test-Path "assets")) {
     Write-Host "Linking assets"
-    cmd.exe /c 'mklink /d assets ..\..\..\..\..\main\assets'
+    cmd.exe /c 'mklink /d assets ..\..\..\..\..\src\assets'
 }
 Pop-Location
 
@@ -148,7 +148,7 @@ Push-Location "$env:ANDROID_NDK\sources\third_party\vulkan\src\common"
 Pop-Location
 
 # Compile all Vulkan shaders
-Push-Location "..\main\vulkan_shader_source"
+Push-Location "..\src\vulkan_shader_source"
     .\compile_shaders.ps1
 Pop-Location
 

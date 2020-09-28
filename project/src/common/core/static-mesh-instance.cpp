@@ -1,4 +1,5 @@
 #include "static-mesh-instance.hpp"
+#include <vector>
 
 using questart::StaticMeshInstance;
 
@@ -32,15 +33,24 @@ struct StaticMeshInstance::Internal
     {
     }
 
-    void update(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix)
+    void update(const std::vector<glm::mat4>& viewMatrix, const std::vector<glm::mat4>& projectionMatrix)
     {
-        meshUniform.viewMatrix = viewMatrix;
-        meshUniform.projectionMatrix = projectionMatrix;
         meshUniform.transformMatrix = glm::translate(identity, position) *
                                       glm::rotate(identity, glm::radians(rotationDegrees), rotationAxis) *
                                       glm::scale(identity, scale);
 
-        transformMatrix = projectionMatrix * viewMatrix * meshUniform.transformMatrix;
+#if defined (QUEST)
+
+        meshUniform.viewMatrix[0] = viewMatrix[0];
+        meshUniform.viewMatrix[1] = viewMatrix[1];
+        meshUniform.projectionMatrix[0] = projectionMatrix[0];
+        meshUniform.projectionMatrix[1] = projectionMatrix[1];
+#else
+        meshUniform.viewMatrix = viewMatrix[0];
+        meshUniform.projectionMatrix = projectionMatrix[0];
+        transformMatrix = projectionMatrix[0] * viewMatrix[0] * meshUniform.transformMatrix;
+#endif
+
     }
 
     void rotateBy(const float& degrees)
@@ -73,7 +83,7 @@ StaticMeshInstance::StaticMeshInstance(
           rotationAxis,
           rotationDegrees)) {}
 
-void StaticMeshInstance::update(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix)
+void StaticMeshInstance::update(const std::vector<glm::mat4>& viewMatrix, const std::vector<glm::mat4>& projectionMatrix)
 {
     internal->update(viewMatrix, projectionMatrix);
 }

@@ -1,9 +1,8 @@
-#pragma once
-
 #include "engine.hpp"
-#include "../../../../../main/src/core/log.hpp"
+#include "log.hpp"
 
 void android_main(struct android_app* app)
 {
-    questart::log("ehelo", "world");
+    questart::log("Main", "Entering");
+    questart::Engine(app).run();
 }

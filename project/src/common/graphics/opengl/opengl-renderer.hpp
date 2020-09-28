@@ -19,7 +19,7 @@ namespace questart
             const questart::assets::Pipeline& pipeline,
             const std::vector<questart::StaticMeshInstance>& staticMeshInstances) override;
 
-        inline void renderEnd() override {}
+        inline void renderEnd(const double& displayTime, void* tracking, long long frameIndex) override {}
 
         inline const questart::WindowSize& getCurrentWindowSize() override { return questart::WindowSize(); }
 

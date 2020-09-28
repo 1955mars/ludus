@@ -65,12 +65,12 @@ struct VulkanApplication::Internal
 
 VulkanApplication::VulkanApplication() : internal(questart::make_internal_ptr<Internal>()) {}
 
-void VulkanApplication::update(const float& delta)
+void VulkanApplication::update(const float& delta, void* tracking)
 {
     internal->update(delta);
 }
 
-void VulkanApplication::render()
+void VulkanApplication::render(const double& displayTime, void* tracking, long long frameIndex)
 {
     internal->render();
 }

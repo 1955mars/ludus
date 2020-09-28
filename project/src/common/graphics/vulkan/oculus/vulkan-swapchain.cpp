@@ -59,6 +59,8 @@ namespace
         uint32_t width = vrapi_GetSystemPropertyInt(&questart::Engine::appJava, VRAPI_SYS_PROP_SUGGESTED_EYE_TEXTURE_WIDTH);
         uint32_t height = vrapi_GetSystemPropertyInt(&questart::Engine::appJava, VRAPI_SYS_PROP_SUGGESTED_EYE_TEXTURE_HEIGHT);
 
+        questart::log("Get Extent: width = " , std::to_string(width) + " height = " + std::to_string(height));
+
         return vk::Extent2D{
                 static_cast<uint32_t>(width),
                 static_cast<uint32_t>(height)};
@@ -211,7 +213,7 @@ struct VulkanSwapchain::Internal
     const VulkanSwapchainFormat format;
     const vk::Extent2D extent;
     std::vector<vk::Image> images;
-    const std::vector<questart::VulkanImageView> imageViews;
+    std::vector<questart::VulkanImageView> imageViews;
     std::vector<vk::Extent2D> fragmentDensityTextureSizes;
     std::vector<vk::Image> fragmentDensityTextures;
     Internal(const vk::Instance& instance,
@@ -221,7 +223,7 @@ struct VulkanSwapchain::Internal
              const vk::SwapchainKHR& oldSwapchain)
             : swapChain(::createSwapChain(instance, physicalDevice, device)),
               swapChainLength(vrapi_GetTextureSwapChainLength(swapChain)),
-              format(VulkanSwapchainFormat{vk::ColorSpaceKHR::eSrgbNonlinear, vk::Format::eR8G8B8Unorm}),
+              format(VulkanSwapchainFormat{vk::ColorSpaceKHR::eSrgbNonlinear, vk::Format::eR8G8B8A8Unorm}),
               extent(::getExtent()),
               images(::getImages(swapChain, swapChainLength)),
               fragmentDensityTextureSizes(::getFragmentDensityTextureSizes(swapChainLength)),
@@ -243,6 +245,8 @@ struct VulkanSwapchain::Internal
             ::transitionLayout(device, commandPool, image, 1, 2, vk::ImageLayout::eUndefined,
                                vk::ImageLayout::eFragmentDensityMapOptimalEXT);
         }
+
+        imageViews = ::createImageViews(device, images, format);
     }
 };
 
@@ -280,4 +284,9 @@ uint32_t VulkanSwapchain::getImageCount() const
 const std::vector<questart::VulkanImageView>& VulkanSwapchain::getImageViews() const
 {
     return internal->imageViews;
+}
+
+const questart::WindowSize& VulkanSwapchain::getCurrentWindowSize() const
+{
+    return questart::WindowSize{internal->extent.width, internal->extent.height};
 }

@@ -7,6 +7,7 @@
 #if defined(QUEST)
 #include "engine.hpp"
 #include "../oculus/vulkan-swapchain.hpp"
+#include "ovr-wrapper.hpp"
 #else
     #include "../windows/vulkan-swapchain.hpp"
 #endif
@@ -157,9 +158,9 @@ namespace
     {
         vk::ClearValue color;
         color.color = vk::ClearColorValue(std::array<float, 4>{
-            164.0f / 256.0f, // Red
-            30.0f / 256.0f,  // Green
-            34.0f / 256.0f,  // Blue
+            1.0f, // Red
+            1.0f,  // Green
+            1.0f,  // Blue
             1.0f});          // Alpha
 
         vk::ClearValue depth;
@@ -234,16 +235,30 @@ struct VulkanRenderContext::Internal
           graphicsFences(device.createFences(maxRenderFrames)),
           scissor(::createScissor(swapchain)),
           viewport(::createViewport(swapchain)),
-          clearValues(::createClearValues()) {}
+          clearValues(::createClearValues())
+    {
+        questart::log("RenderContext: ", "maxRenderFrames: " + std::to_string(swapchain.getImageCount()));
+    }
 
     bool renderBegin(const questart::VulkanDevice& device)
     {
+
+        currentFrameIndex = (currentFrameIndex + 1) % maxRenderFrames;
+
         // Get the appropriate graphics fence and semaphore for the current render frame.
         const vk::Fence& graphicsFence{graphicsFences[currentFrameIndex].get()};
 
+#if defined(QUEST)
+        // Wait for the fence to complete and then reset it
+        static constexpr uint64_t timeout{std::numeric_limits<uint64_t>::max()};
+        device.getDevice().waitForFences(1, &graphicsFence, VK_TRUE, timeout);
+        device.getDevice().resetFences(1, &graphicsFence);
+
+        currentSwapchainImageIndex = currentFrameIndex;
+#else
+
         const vk::Semaphore& graphicsSemaphore{graphicsSemaphores[currentFrameIndex].get()};
 
-#ifndef QUEST
         try
         {
             // Attempt to acquire the next swapchain image index to target.
@@ -259,9 +274,7 @@ struct VulkanRenderContext::Internal
             return false;
         }
 
-        int frameIndex = currentSwapchainImageIndex;
 #endif
-
         // Grab the command buffer to use for the current swapchain image index.
         const vk::CommandBuffer& commandBuffer{getActiveCommandBuffer()};
 
@@ -271,7 +284,6 @@ struct VulkanRenderContext::Internal
         // Begin the command buffer.
         vk::CommandBufferBeginInfo commandBufferBeginInfo{vk::CommandBufferUsageFlagBits::eOneTimeSubmit, nullptr};
         commandBuffer.begin(&commandBufferBeginInfo);
-
         // Configure the scissor.
         commandBuffer.setScissor(
             0,         // Which scissor to start at
@@ -284,14 +296,10 @@ struct VulkanRenderContext::Internal
             1,          // How many viewports to apply
             &viewport); // Viewport data
 
-#if defined(QUEST)
-        int frameIndex = currentFrameIndex;
-#endif
-
         // Define the render pass attributes to apply.
         vk::RenderPassBeginInfo renderPassBeginInfo{
             renderPass.getRenderPass(),                     // Render pass to use
-            framebuffers[frameIndex].get(), // Current frame buffer
+            framebuffers[currentFrameIndex].get(), // Current frame buffer
             scissor,                                        // Render area
             2,                                              // Clear value count
             clearValues.data()};                            // Clear values
@@ -346,7 +354,16 @@ struct VulkanRenderContext::Internal
 
 #if defined (QUEST)
 
+
+
         ovrTracking2* trackingInfo = (ovrTracking2*) tracking;
+
+        if(tracking == nullptr)
+        {
+            questart::log("Render End:" , "Tracking info is null");
+        }
+
+        //questart::log("Render End: ", "Tracking info: " + std::to_string(trackingInfo->Eye[0].ViewMatrix.M[0][0]));
 
         ovrLayerProjection2 worldLayer = vrapi_DefaultLayerProjection2();
         worldLayer.HeadPose = trackingInfo->HeadPose;
@@ -397,7 +414,6 @@ struct VulkanRenderContext::Internal
         device.getPresentationQueue().waitIdle();
 #endif
         // Increment our current frame index, wrapping it when it hits our maximum.
-        currentFrameIndex = (currentFrameIndex + 1) % maxRenderFrames;
 
         return true;
 
@@ -405,7 +421,7 @@ struct VulkanRenderContext::Internal
 
     const vk::CommandBuffer& getActiveCommandBuffer() const
     {
-        return commandBuffers[currentSwapchainImageIndex].get();
+        return commandBuffers[currentFrameIndex].get();
     }
 };
 
