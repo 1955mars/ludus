@@ -32,35 +32,6 @@ if (!(Test-Path "third-party")) {
 }
 Pop-Location
 
-# Check that we have the SDL third party source folder.
-if (!(Test-Path "..\..\third-party\SDL")) {
-    Write-Host "Downloading SDL source into third party folder SDL ..."
-    $WebClient = New-Object System.Net.WebClient
-    $WebClient.DownloadFile("https://www.libsdl.org/release/SDL2-2.0.12.zip", "..\..\third-party\SDL2-2.0.12.zip")
-
-    Push-Location -Path "..\..\third-party"
-        Write-Host "Unzipping SDL source into third-party\SDL ..."
-        cmd.exe /c 'tar -xf SDL2-2.0.12.zip'
-        Move-Item -Path SDL2-2.0.12 -Destination SDL
-        Remove-Item -Path SDL2-2.0.12.zip
-    Pop-Location
-}
-
-# If required, create the SDL symlink into the Android library project so it can include it in its build.
-Push-Location "sdl\jni"
-if (!(Test-Path "SDL")) {
-	Write-Host "Linking third-party\SDL to sdl\jni\SDL."
-	cmd.exe /c 'mklink /d SDL ..\..\..\..\third-party\SDL'
-}
-Pop-Location
-
-# Copy the Java classes from the SDL library source into the Android library project.
-Push-Location "sdl\src\main"
-if (!(Test-Path "java\org\libsdl")) {
-    Write-Host "Copying base SDL Java source to Android library project ..."
-    Copy-Item -Path ..\..\..\..\..\third-party\SDL\android-project\app\src\main\java -Recurse -Destination java
-}
-Pop-Location
 
 # Check that we have the GLM third party library
 if (!(Test-Path "..\..\third-party\glm")) {
@@ -105,33 +76,6 @@ if (!(Test-Path "assets")) {
 }
 Pop-Location
 
-# Check that we have the SDL2 image third party source folder.
-if (!(Test-Path "..\..\third-party\SDL2_image")) {
-    Write-Host "Fetching SDL2_image source library (2.0.4) ..."
-    $WebClient = New-Object System.Net.WebClient
-    $WebClient.DownloadFile("https://www.libsdl.org/projects/SDL_image/release/SDL2_image-2.0.4.zip", "..\..\third-party\SDL2_image-2.0.4.zip")
-
-    Push-Location -Path "..\..\third-party"
-        Write-Host "Unzipping SDL2_image source into third-party\SDL2_image ..."
-        cmd.exe /c 'tar -xf SDL2_image-2.0.4.zip'
-        Move-Item -Path SDL2_image-2.0.4 -Destination SDL2_image
-        Remove-Item -Path SDL2_image-2.0.4.zip
-    Pop-Location
-}
-
-# If required, create the SDL2_image symlink into the Android library project so it can include it in its build.
-Push-Location "sdl\jni"
-if (!(Test-Path "SDL2_image")) {
-    Write-Host "Linking third-party\SDL2_image to sdl\jni\SDL2_image."
-    cmd.exe /c 'mklink /d SDL2_image ..\..\..\..\third-party\SDL2_image'
-}
-Pop-Location
-
-# We will disable 'webp' integration.
-Push-Location "..\..\third-party\SDL2_image"
-    Write-Host "Disabling SDL2_image webp integration ..."
-    ((Get-Content -Path Android.mk -Raw) -replace('SUPPORT_WEBP \?= true', 'SUPPORT_WEBP ?= false')) | Set-Content -Path Android.mk
-Pop-Location
 
 # We need to add our own `vulkan-wrapper-patch.h` header into the `vulkan_wrapper.h`
 # that ships with NDK version 20. The patch fixes compilation problems when using the
