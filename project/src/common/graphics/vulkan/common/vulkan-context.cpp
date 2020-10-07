@@ -9,6 +9,7 @@
 #include "../../../core/log.hpp"
 #include <set>
 #include <vector>
+#include <string>
 
 using questart::VulkanContext;
 
@@ -32,7 +33,7 @@ namespace
         // Iterate all the available layers for the current device.
         for (auto const& properties : vk::enumerateInstanceLayerProperties())
         {
-            std::string layerName{properties.layerName};
+            std::string layerName = properties.layerName;
 
             questart::log(logTag, "Available layer: " + layerName);
 

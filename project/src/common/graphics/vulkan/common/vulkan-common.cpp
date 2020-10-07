@@ -11,6 +11,8 @@
 
 #include <set>
 #include <sstream>
+#include <string>
+
 
 std::vector<std::string> questart::vulkan::getRequiredVulkanExtensionNames()
 {
@@ -96,7 +98,7 @@ bool questart::vulkan::isVulkanAvailable()
     // each one from the required extensions set along the way.
     for (const vk::ExtensionProperties& availableExtension : vk::enumerateInstanceExtensionProperties())
     {
-        requiredExtensionNames.erase(std::string(availableExtension.extensionName));
+        requiredExtensionNames.erase(availableExtension.extensionName);
     }
 
     // If our required extensions set isn't empty it means that one or more of

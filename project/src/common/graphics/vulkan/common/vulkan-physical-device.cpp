@@ -57,7 +57,7 @@ namespace
         // presence of the swapchain extension.
         for (const auto& extension : selectedDevice.enumerateDeviceExtensionProperties())
         {
-            if (swapchainName == std::string{extension.extensionName})
+            if (swapchainName == extension.extensionName)
             {
                 hasSwapchainSupport = true;
                 break;
@@ -116,7 +116,7 @@ namespace
 
         // We should now have selected a physical device, which may or may not have a discrete GPU
         // but will have been selected with a preference to having one.
-        questart::log(logTag, "Physical device: " + std::string{selectedProperties.deviceName} + ".");
+        questart::log(logTag, "Physical device: " + std::string{selectedProperties.deviceName.data()} + ".");
 
         return selectedDevice;
     }
