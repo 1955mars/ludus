@@ -27,3 +27,4 @@ LUDUS is an educational content creation tool in VR
 	6. Open android-studio. Select File->Open and choose quest folder under questart/project/
 	7. In the project window, choose the Project from the drop-down. Source code is seen under Quest Start
 	8. Connect quest to the pc. When the device name is seen in android studio, press run app button to build and push to quest
+### Contact Us: https://twitter.com/RongyiZhao
