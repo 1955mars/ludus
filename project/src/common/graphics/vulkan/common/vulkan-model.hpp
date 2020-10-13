@@ -6,10 +6,11 @@
 #include "vulkan-image.hpp"
 #include "vulkan-texture.hpp"
 
-#define TINYGLTF_NO_STB_IMAGE_WRITE
 #if defined(QUEST)
 #define TINYGLTF_ANDROID_LOAD_FROM_ASSETS
 #endif
+
+#define MAX_NUM_JOINTS 128u
 
 namespace questart
 {

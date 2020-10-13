@@ -20,12 +20,14 @@ namespace questart
 
     struct StaticMeshInstance
     {
-        StaticMeshInstance(const questart::assets::StaticMesh& staticMesh,
+        StaticMeshInstance(const questart::assets::StaticModel& staticModel,
+                           const questart::assets::StaticMesh& staticMesh,
                            const questart::assets::Texture& texture,
                            const glm::vec3& position = glm::vec3{0.0f, 0.0f, 0.0f},
                            const glm::vec3& scale = glm::vec3{1.0f, 1.0f, 1.0f},
                            const glm::vec3& rotationAxis = glm::vec3{0.0f, 1.0f, 0.0f},
                            const float& rotationDegrees = 0.0f);
+
 
         void update(const std::vector<glm::mat4>& viewMatrix, const std::vector<glm::mat4>& projectionMatrix);
 

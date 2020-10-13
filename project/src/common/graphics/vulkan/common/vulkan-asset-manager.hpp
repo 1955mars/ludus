@@ -4,6 +4,7 @@
 #include "../../../core/internal_ptr.hpp"
 #include "vulkan-command-pool.hpp"
 #include "vulkan-device.hpp"
+#include "vulkan-model.hpp"
 #include "vulkan-mesh.hpp"
 #include "vulkan-physical-device.hpp"
 #include "vulkan-render-context.hpp"

@@ -271,6 +271,7 @@ struct VulkanTexture::Internal
     const questart::VulkanImage image;
     const questart::VulkanImageView imageView;
     const vk::UniqueSampler sampler;
+    vk::DescriptorImageInfo descriptor;
 
     Internal(const questart::assets::Texture& textureId,
              const questart::VulkanPhysicalDevice& physicalDevice,
@@ -281,6 +282,13 @@ struct VulkanTexture::Internal
           image(::createImage(physicalDevice, device, commandPool, texturePath)),
           imageView(::createImageView(device, image)),
           sampler(::createSampler(physicalDevice, device, image)) {}
+
+    void UpdateDescriptor()
+    {
+        descriptor.sampler = sampler.get();
+        descriptor.imageView = imageView.getImageView();
+        descriptor.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+    }
 };
 
 VulkanTexture::VulkanTexture(const questart::assets::Texture& textureId,

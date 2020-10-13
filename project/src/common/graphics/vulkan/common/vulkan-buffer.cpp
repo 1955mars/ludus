@@ -40,17 +40,21 @@ namespace
 
 struct VulkanBuffer::Internal
 {
+    const questart::VulkanDevice& device;
     const vk::UniqueBuffer buffer;
     const vk::UniqueDeviceMemory deviceMemory;
+    void* mappedMemory;
 
     Internal(const questart::VulkanPhysicalDevice& physicalDevice,
              const questart::VulkanDevice& device,
              const vk::DeviceSize& size,
              const vk::BufferUsageFlags& bufferFlags,
              const vk::MemoryPropertyFlags& memoryFlags,
-             const void* dataSource)
-        : buffer(::createBuffer(device, size, bufferFlags)),
-          deviceMemory(::allocateMemory(physicalDevice, device, buffer.get(), memoryFlags))
+             const void* dataSource, bool mapMemory)
+        : device(device),
+          buffer(::createBuffer(device, size, bufferFlags)),
+          deviceMemory(::allocateMemory(physicalDevice, device, buffer.get(), memoryFlags)),
+          mappedMemory(nullptr)
     {
         // Take the buffer and the allocated memory and bind them together.
         device.getDevice().bindBufferMemory(buffer.get(), deviceMemory.get(), 0);
@@ -58,19 +62,25 @@ struct VulkanBuffer::Internal
         // Take the datasource and copy it into our allocated memory block.
         if (dataSource)
         {
-            void* mappedMemory{device.getDevice().mapMemory(deviceMemory.get(), 0, size)};
+            mappedMemory = device.getDevice().mapMemory(deviceMemory.get(), 0, size);
             std::memcpy(mappedMemory, dataSource, static_cast<size_t>(size));
-            device.getDevice().unmapMemory(deviceMemory.get());
+            if (!mapMemory)
+            {
+                device.getDevice().unmapMemory(deviceMemory.get());
+                mappedMemory = nullptr;
+            }
         }
     }
 
-    void copyData(const questart::VulkanDevice& device, const vk::DeviceSize& size, const void* dataSource)
+    void copyData(const vk::DeviceSize& size, const void* dataSource)
     {
         if (dataSource)
         {
-            void* mappedMemory{device.getDevice().mapMemory(deviceMemory.get(), 0, size)};
+            if (!mappedMemory)
+            {
+                mappedMemory = device.getDevice().mapMemory(deviceMemory.get(), 0, size);
+            }
             std::memcpy(mappedMemory, dataSource, static_cast<size_t>(size));
-            device.getDevice().unmapMemory(deviceMemory.get());
         }
     }
 };
@@ -80,8 +90,8 @@ VulkanBuffer::VulkanBuffer(const questart::VulkanPhysicalDevice& physicalDevice,
                            const vk::DeviceSize& size,
                            const vk::BufferUsageFlags& bufferFlags,
                            const vk::MemoryPropertyFlags& memoryFlags,
-                           const void* dataSource)
-    : internal(questart::make_internal_ptr<Internal>(physicalDevice, device, size, bufferFlags, memoryFlags, dataSource)) {}
+                           const void* dataSource, bool mapMemory)
+    : internal(questart::make_internal_ptr<Internal>(physicalDevice, device, size, bufferFlags, memoryFlags, dataSource, mapMemory)) {}
 
 const vk::Buffer& VulkanBuffer::getBuffer() const
 {
@@ -125,7 +135,7 @@ questart::VulkanBuffer VulkanBuffer::createDeviceLocalBuffer(const questart::Vul
     return deviceLocalBuffer;
 }
 
-void VulkanBuffer::copyData(const questart::VulkanDevice& device, const vk::DeviceSize& size, const void* dataSource)
+void VulkanBuffer::copyData(const vk::DeviceSize& size, const void* dataSource)
 {
-    internal->copyData(device, size, dataSource);
+    internal->copyData(size, dataSource);
 }

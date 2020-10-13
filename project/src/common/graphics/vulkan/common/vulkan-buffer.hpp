@@ -15,7 +15,7 @@ namespace questart
                      const vk::DeviceSize& size,
                      const vk::BufferUsageFlags& bufferFlags,
                      const vk::MemoryPropertyFlags& memoryFlags,
-                     const void* dataSource);
+                     const void* dataSource, bool mapMemory = false);
 
         const vk::Buffer& getBuffer() const;
 
@@ -26,7 +26,7 @@ namespace questart
                                                          const vk::BufferUsageFlags& bufferFlags,
                                                          const void* dataSource);
 
-        void copyData(const questart::VulkanDevice& device, const vk::DeviceSize& size, const void* dataSource);
+        void copyData(const vk::DeviceSize& size, const void* dataSource);
 
     private:
         struct Internal;

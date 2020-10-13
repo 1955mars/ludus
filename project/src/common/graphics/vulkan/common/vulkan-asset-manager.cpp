@@ -25,6 +25,22 @@ namespace
                                    renderContext.getRenderPass());
     }
 
+    questart::VulkanModel createModel(const questart::VulkanPhysicalDevice& physicalDevice,
+                                    const questart::VulkanDevice& device,
+                                    const questart::VulkanCommandPool& commandPool,
+                                    const questart::assets::StaticModel& staticModel)
+    {
+        std::string modelPath{questart::assets::resolveStaticModelPath(staticModel)};
+
+        questart::log("questart::VulkanAssetManager::createModel", "Creating static model from " + modelPath);
+
+        return questart::VulkanModel(physicalDevice,
+                                    device,
+                                    commandPool,
+                                    modelPath);
+    }
+
+
     questart::VulkanMesh createMesh(const questart::VulkanPhysicalDevice& physicalDevice,
                                const questart::VulkanDevice& device,
                                const questart::VulkanCommandPool& commandPool,
@@ -65,6 +81,7 @@ namespace
 struct VulkanAssetManager::Internal
 {
     std::unordered_map<questart::assets::Pipeline, questart::VulkanPipeline> pipelineCache;
+    std::unordered_map<questart::assets::StaticModel, questart::VulkanModel> staticModelCache;
     std::unordered_map<questart::assets::StaticMesh, questart::VulkanMesh> staticMeshCache;
     std::unordered_map<questart::assets::Texture, questart::VulkanTexture> textureCache;
 
@@ -83,6 +100,16 @@ struct VulkanAssetManager::Internal
                 pipelineCache.insert(std::make_pair(
                     pipeline,
                     ::createPipeline(pipeline, physicalDevice, device, renderContext)));
+            }
+        }
+
+        for (const auto& staticModel : assetManifest.staticModels)
+        {
+            if (staticModelCache.count(staticModel) == 0)
+            {
+                staticModelCache.insert(std::make_pair(
+                    staticModel,
+                    ::createModel(physicalDevice, device, commandPool, staticModel)));
             }
         }
 

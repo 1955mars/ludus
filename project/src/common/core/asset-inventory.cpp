@@ -13,6 +13,17 @@ std::string questart::assets::resolvePipelinePath(const questart::assets::Pipeli
     }
 }
 
+std::string questart::assets::resolveStaticModelPath(const questart::assets::StaticModel& staticModel)
+{
+    switch (staticModel)
+    {
+        case questart::assets::StaticModel::Helmet:
+            return "assets/models/DamagedHelmet/glTF-Embedded/DamagedHelmet.gltf";
+        case questart::assets::StaticModel::Box:
+            return "assets/models/Box/glTF-Embedded/Box.gltf";
+    }
+}
+
 std::string questart::assets::resolveStaticMeshPath(const questart::assets::StaticMesh& staticMesh)
 {
     switch (staticMesh)

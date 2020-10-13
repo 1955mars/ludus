@@ -5,6 +5,7 @@ using questart::StaticMeshInstance;
 
 struct StaticMeshInstance::Internal
 {
+    const questart::assets::StaticModel model;
     const questart::assets::StaticMesh mesh;
     const questart::assets::Texture texture;
     const glm::mat4 identity;
@@ -16,13 +17,15 @@ struct StaticMeshInstance::Internal
     glm::mat4 transformMatrix;
     StaticMeshUniform meshUniform;
 
-    Internal(const questart::assets::StaticMesh& mesh,
+    Internal(const questart::assets::StaticModel& model,
+             const questart::assets::StaticMesh& mesh,
              const questart::assets::Texture& texture,
              const glm::vec3& position,
              const glm::vec3& scale,
              const glm::vec3& rotationAxis,
              const float& rotationDegrees)
-        : mesh(mesh),
+        : model(model), 
+          mesh(mesh),
           texture(texture),
           identity(glm::mat4{1.0f}),
           position(position),
@@ -69,6 +72,7 @@ struct StaticMeshInstance::Internal
 };
 
 StaticMeshInstance::StaticMeshInstance(
+    const questart::assets::StaticModel& staticModel,
     const questart::assets::StaticMesh& staticMesh,
     const questart::assets::Texture& texture,
     const glm::vec3& position,
@@ -76,6 +80,7 @@ StaticMeshInstance::StaticMeshInstance(
     const glm::vec3& rotationAxis,
     const float& rotationDegrees)
     : internal(questart::make_internal_ptr<Internal>(
+          staticModel,
           staticMesh,
           texture,
           position,

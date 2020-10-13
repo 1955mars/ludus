@@ -452,7 +452,7 @@ struct VulkanPipeline::Internal
         }
 
         questart::VulkanBuffer& buffer = staticMeshUniformBuffers.at(instanceId);
-        buffer.copyData(device, size, data);
+        buffer.copyData(size, data);
     }
 
     void render(const questart::VulkanDevice& device,

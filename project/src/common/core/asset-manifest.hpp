@@ -9,6 +9,8 @@ namespace questart
     {
         const std::vector<questart::assets::Pipeline> pipelines;
 
+        const std::vector<questart::assets::StaticModel> staticModels;
+
         const std::vector<questart::assets::StaticMesh> staticMeshes;
 
         const std::vector<questart::assets::Texture> textures;

@@ -6,6 +6,7 @@
 
 using questart::SceneMain;
 using questart::assets::Pipeline;
+using questart::assets::StaticModel;
 using questart::assets::StaticMesh;
 using questart::assets::Texture;
 
@@ -33,6 +34,7 @@ struct SceneMain::Internal
     {
         return questart::AssetManifest{
             {Pipeline::Default},
+            {StaticModel::Box},
             {StaticMesh::Crate, StaticMesh::Torus},
             {Texture::Crate, Texture::RedCrossHatch}};
     }
@@ -40,6 +42,7 @@ struct SceneMain::Internal
     void prepare()
     {
         staticMeshes.push_back(questart::StaticMeshInstance{
+            StaticModel::None,
             StaticMesh::Crate,           // Mesh
             Texture::Crate,              // Texture
             glm::vec3{0.4f, 0.6f, 0.0f}, // Position
@@ -48,6 +51,7 @@ struct SceneMain::Internal
             0.0f});                      // Initial rotation
 
         staticMeshes.push_back(questart::StaticMeshInstance{
+            StaticModel::None,
             StaticMesh::Torus,            // Mesh
             Texture::RedCrossHatch,       // Texture
             glm::vec3{-0.6f, 0.4f, 0.0f}, // Position
@@ -56,6 +60,7 @@ struct SceneMain::Internal
             0.0f});                       // Initial rotation
 
         staticMeshes.push_back(questart::StaticMeshInstance{
+            StaticModel::None,
             StaticMesh::Crate,             // Mesh
             Texture::Crate,                // Texture
             glm::vec3{-0.5f, -0.5f, 0.0f}, // Position
@@ -64,6 +69,7 @@ struct SceneMain::Internal
             90.0f});                       // Initial rotation
 
         staticMeshes.push_back(questart::StaticMeshInstance{
+            StaticModel::None,
             StaticMesh::Torus,            // Mesh
             Texture::RedCrossHatch,       // Texture
             glm::vec3{0.6f, -0.4f, 0.0f}, // Position
