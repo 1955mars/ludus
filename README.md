@@ -1,4 +1,4 @@
-![](/webassets/title.PNG)
+![](/webassets/title2.jpg)
 
 # LUDUS
 
