@@ -1,3 +1,5 @@
+![](/webassets/title2.jpg)
+
 # LUDUS
 
 LUDUS is an educational content creation tool in VR
