@@ -1,10 +1,48 @@
 ![](/webassets/title2.jpg)
 
 # LUDUS
+### By RoManS
+	Mansoor Patan
+	Rongyi Zhao
+	Surya Ajayakumar
 
-LUDUS is an educational content creation tool in VR
 
-## Steps to clone, build and run:
+## What is LUDUS?
+
+Ludus is a VR scenario creation environment for educators who would like to use VR tools to create interactive experiences to aid their curriculums. Create mini tutorials to challenge the boundaries between fun and learning.
+
+## Devlog
+
+### Latest features:
+	- Load/Save feature and shareable tutorials
+	- Zoom lens for precise inspection
+	- Laser pointer for ranged selection
+	
+### Upcoming Features:
+	- Gizmo mode for precision translation
+	- Media Embedding (text/audio/video)
+	- Tutorial and Asset server
+
+## Resources and Links
+
+### Demo Video
+	*Coming Soon*
+	
+### Latest stable build
+	*Coming soon*
+
+## Steps to clone, build and run the app in Quest 2 (from Unity):
+	1. Download the code from GitHub
+	2. Download Unity version 2019.4.4f1
+		- Install with Android SDK, NDK and OpenJDK checked
+	4. Connect Oculus Quest 2 device to PC with developer mode enabled
+	3. Open the project and go to File -> Build Settings
+	4. Select platform as Android
+	5. Set Texture Compression to ASTC
+	6. Select device under Run Deivice
+	7. Click on Build and Run
+
+## Steps to clone, build and run the engine :
 
 ### Windows:
 	1. Enable developer mode on your windows pc
